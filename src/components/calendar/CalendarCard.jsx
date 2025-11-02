@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getAllDailyContent } from '../../utils/dailyContent';
 
 const CalendarCard = ({
   date,
@@ -16,6 +17,9 @@ const CalendarCard = ({
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [todayImage, setTodayImage] = useState(null);
+  const [breedInfo, setBreedInfo] = useState(null);
+  const [dailyContent, setDailyContent] = useState(null);
+  const [showContent, setShowContent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -69,11 +73,31 @@ const CalendarCard = ({
         setTodayImage(imageUrl);
         setRetryCount(0); // Reset retry count on success
 
+        // Extract breed info from URL (for dogs)
+        let extractedBreed = null;
+        if (isDog && imageUrl.includes('/breeds/')) {
+          const breedMatch = imageUrl.match(/\/breeds\/([^/]+)\//);
+          if (breedMatch) {
+            const breedSlug = breedMatch[1];
+            const breedParts = breedSlug.split('-');
+            const breedName = breedParts.map(part =>
+              part.charAt(0).toUpperCase() + part.slice(1)
+            ).join(' ');
+            extractedBreed = breedName;
+            setBreedInfo(breedName);
+          } else {
+            setBreedInfo(null);
+          }
+        } else {
+          setBreedInfo(null);
+        }
+
         // Notify parent about the loaded image
         if (onImageLoad) {
           onImageLoad({
             url: imageUrl,
-            type: isDog ? 'dog' : 'cat'
+            type: isDog ? 'dog' : 'cat',
+            breed: extractedBreed
           });
         }
       } catch (err) {
@@ -99,6 +123,12 @@ const CalendarCard = ({
 
     fetchDailyImage();
   }, [isFlipped, date, retryCount, onImageLoad]);
+
+  // Load daily content when date or flip changes
+  useEffect(() => {
+    const content = getAllDailyContent(date, isFlipped);
+    setDailyContent(content);
+  }, [date, isFlipped]);
 
   const formatDate = () => {
     const options = { weekday: 'long', month: 'long', day: 'numeric' };
@@ -187,6 +217,15 @@ const CalendarCard = ({
               </span>
             </div>
 
+            {/* Breed Info Badge */}
+            {breedInfo && !loading && !error && (
+              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <span className="text-white text-xs font-semibold">
+                  {breedInfo}
+                </span>
+              </div>
+            )}
+
             {/* Favorite Button */}
             {!loading && !error && (
               <button
@@ -239,6 +278,66 @@ const CalendarCard = ({
               )}
             </button>
           </div>
+
+          {/* Daily Content Section */}
+          {dailyContent && (
+            <div className="mt-4 space-y-2">
+              {/* Mood of the Day */}
+              <div className="p-3 glass-effect rounded-custom">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">{dailyContent.mood.emoji}</span>
+                  <span className="text-white font-semibold text-sm">Today&apos;s Mood:</span>
+                  <span className="text-white/90 text-sm">{dailyContent.mood.text}</span>
+                </div>
+                <p className="text-white/70 text-xs ml-9">{dailyContent.mood.description}</p>
+              </div>
+
+              {/* Expandable Fun Fact & Quote */}
+              <button
+                onClick={() => setShowContent(!showContent)}
+                className="w-full p-3 glass-effect rounded-custom hover:bg-white/20 transition-all text-left group"
+                aria-expanded={showContent}
+                aria-label="Toggle fun fact and quote"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-semibold text-sm">
+                    💡 Fun Fact & Quote
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-white/70 transition-transform ${showContent ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {showContent && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-3 glass-effect rounded-custom space-y-2">
+                      <div>
+                        <p className="text-white/60 text-xs font-semibold mb-1">Did you know?</p>
+                        <p className="text-white/90 text-sm">{dailyContent.fact}</p>
+                      </div>
+                      <div className="border-t border-white/20 pt-2">
+                        <p className="text-white/60 text-xs font-semibold mb-1">Quote of the Day</p>
+                        <p className="text-white/90 text-sm italic">&quot;{dailyContent.quote}&quot;</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Journal Entry Preview */}
           {journalEntry && (

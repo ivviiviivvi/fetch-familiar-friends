@@ -6,6 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import JournalModal from './components/modals/JournalModal';
 import AiModal from './components/modals/AiModal';
 import FavoritesModal from './components/modals/FavoritesModal';
+import StatisticsModal from './components/modals/StatisticsModal';
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -15,6 +16,7 @@ function App() {
   const [isJournalOpen, setIsJournalOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   // Data states
   const [favorites, setFavorites] = useState([]);
@@ -127,9 +129,19 @@ function App() {
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
         <div className="container mx-auto max-w-2xl">
-          <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">
-            DogTale Daily
-          </h1>
+          <div className="relative mb-4">
+            <h1 className="text-4xl font-bold text-center text-gray-800">
+              DogTale Daily
+            </h1>
+            <button
+              onClick={() => setIsStatsOpen(true)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="View statistics"
+              title="View your statistics"
+            >
+              <span className="text-2xl">📊</span>
+            </button>
+          </div>
 
           <p className="text-center text-gray-600 mb-6">
             Your daily dose of dog joy 🐾
@@ -181,6 +193,13 @@ function App() {
         favorites={favorites}
         onRemove={handleRemoveFavorite}
         onClearAll={handleClearAllFavorites}
+      />
+
+      <StatisticsModal
+        isOpen={isStatsOpen}
+        onClose={() => setIsStatsOpen(false)}
+        favorites={favorites}
+        journalEntries={journalEntries}
       />
     </ErrorBoundary>
   );
