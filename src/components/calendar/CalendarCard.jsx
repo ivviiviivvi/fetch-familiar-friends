@@ -32,7 +32,11 @@ const CalendarCard = ({
     park: 'from-lime-400 to-emerald-600',
     beach: 'from-sky-400 to-blue-600',
     forest: 'from-green-500 to-green-800',
-    tundra: 'from-cyan-400 to-sky-700'
+    tundra: 'from-cyan-400 to-sky-700',
+    sunset: 'from-orange-400 to-pink-600',
+    night: 'from-indigo-500 to-purple-800',
+    snow: 'from-blue-100 to-cyan-300',
+    autumn: 'from-yellow-600 to-red-700'
   };
 
   // Fetch daily image
@@ -353,7 +357,7 @@ const CalendarCard = ({
 
 CalendarCard.propTypes = {
   date: PropTypes.instanceOf(Date).isRequired,
-  theme: PropTypes.oneOf(['park', 'beach', 'forest', 'tundra']),
+  theme: PropTypes.oneOf(['park', 'beach', 'forest', 'tundra', 'sunset', 'night', 'snow', 'autumn']),
   onJournalClick: PropTypes.func,
   onAiClick: PropTypes.func,
   onFavoritesClick: PropTypes.func,
