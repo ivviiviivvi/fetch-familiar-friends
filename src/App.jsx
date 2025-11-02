@@ -250,6 +250,7 @@ function App() {
         date={currentDate}
         initialEntry={currentJournalEntry}
         onSave={handleSaveJournal}
+        allEntries={journalEntries}
       />
 
       <AiModal
