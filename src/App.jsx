@@ -10,10 +10,12 @@ import FavoritesModal from './components/modals/FavoritesModal';
 import StatisticsModal from './components/modals/StatisticsModal';
 import KeyboardShortcutsModal from './components/modals/KeyboardShortcutsModal';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useDarkMode } from './hooks/useDarkMode';
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [theme, setTheme] = useState('park');
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   // Modal states
   const [isJournalOpen, setIsJournalOpen] = useState(false);
@@ -181,25 +183,34 @@ function App() {
 
   useThemeCycleShortcut(handleCycleTheme, !anyModalOpen);
 
-  // Help and view toggle shortcuts (always active except when typing)
+  // Help, view toggle, and dark mode shortcuts (always active except when typing)
   useKeyboardShortcuts({
     '?': () => setIsShortcutsOpen(true),
     'shift+/': () => setIsShortcutsOpen(true),
     'm': () => setShowMonthView(!showMonthView),
+    'd': toggleDarkMode,
   }, !anyModalOpen);
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 transition-colors duration-200">
         <div className="container mx-auto max-w-2xl">
           <div className="relative mb-4">
-            <h1 className="text-4xl font-bold text-center text-gray-800">
+            <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100 transition-colors">
               DogTale Daily
             </h1>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-2">
               <button
+                onClick={toggleDarkMode}
+                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={isDarkMode ? 'Light mode (D)' : 'Dark mode (D)'}
+              >
+                <span className="text-xl">{isDarkMode ? '☀️' : '🌙'}</span>
+              </button>
+              <button
                 onClick={() => setShowMonthView(!showMonthView)}
-                className="p-2 bg-white/50 hover:bg-white/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label={showMonthView ? 'Show day view' : 'Show month view'}
                 title={showMonthView ? 'Show day view (M)' : 'Show month view (M)'}
               >
@@ -207,7 +218,7 @@ function App() {
               </button>
               <button
                 onClick={() => setIsShortcutsOpen(true)}
-                className="p-2 bg-white/50 hover:bg-white/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Keyboard shortcuts"
                 title="Keyboard shortcuts (?)"
               >
@@ -215,7 +226,7 @@ function App() {
               </button>
               <button
                 onClick={() => setIsStatsOpen(true)}
-                className="p-2 bg-white/50 hover:bg-white/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="View statistics"
                 title="View your statistics (S)"
               >
@@ -224,7 +235,7 @@ function App() {
             </div>
           </div>
 
-          <p className="text-center text-gray-600 mb-6">
+          <p className="text-center text-gray-600 dark:text-gray-300 mb-6 transition-colors">
             Your daily dose of dog joy 🐾
           </p>
 

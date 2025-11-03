@@ -129,14 +129,14 @@ const MonthCalendar = ({ currentDate, journalEntries = {}, favorites = [], onDat
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-bold text-gray-800">{formatMonthYear()}</h3>
+        <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{formatMonthYear()}</h3>
         <div className="flex gap-2">
           <button
             onClick={handlePrevMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg transition-colors"
             aria-label="Previous month"
             title="Previous month"
           >
@@ -146,14 +146,14 @@ const MonthCalendar = ({ currentDate, journalEntries = {}, favorites = [], onDat
           </button>
           <button
             onClick={handleToday}
-            className="px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
             aria-label="Go to today"
           >
             Today
           </button>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg transition-colors"
             aria-label="Next month"
             title="Next month"
           >
@@ -169,7 +169,7 @@ const MonthCalendar = ({ currentDate, journalEntries = {}, favorites = [], onDat
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center text-sm font-semibold text-gray-600 py-2"
+            className="text-center text-sm font-semibold text-gray-600 dark:text-gray-400 py-2"
           >
             {day}
           </div>
@@ -194,10 +194,10 @@ const MonthCalendar = ({ currentDate, journalEntries = {}, favorites = [], onDat
               whileTap={!isFutureDay ? { scale: 0.95 } : {}}
               className={`
                 relative aspect-square p-2 rounded-lg text-center transition-all
-                ${!dayData.isCurrentMonth ? 'text-gray-300' : 'text-gray-700'}
-                ${isCurrentDay ? 'ring-2 ring-blue-500' : ''}
-                ${isSelectedDay ? 'bg-blue-500 text-white font-bold' : ''}
-                ${!isSelectedDay && dayData.isCurrentMonth && !isFutureDay ? 'hover:bg-gray-100' : ''}
+                ${!dayData.isCurrentMonth ? 'text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-200'}
+                ${isCurrentDay ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
+                ${isSelectedDay ? 'bg-blue-500 dark:bg-blue-600 text-white font-bold' : ''}
+                ${!isSelectedDay && dayData.isCurrentMonth && !isFutureDay ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : ''}
                 ${isFutureDay ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                 ${!isFutureDay && !isSelectedDay ? 'focus:outline-none focus:ring-2 focus:ring-blue-400' : ''}
               `}
@@ -233,14 +233,14 @@ const MonthCalendar = ({ currentDate, journalEntries = {}, favorites = [], onDat
       </div>
 
       {/* Legend */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
+            <div className="w-4 h-4 border-2 border-blue-500 dark:border-blue-400 rounded"></div>
             <span>Today</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-blue-500 rounded"></div>
+            <div className="w-4 h-4 bg-blue-500 dark:bg-blue-600 rounded"></div>
             <span>Selected</span>
           </div>
           <div className="flex items-center gap-2">

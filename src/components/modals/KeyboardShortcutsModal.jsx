@@ -25,6 +25,7 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
     {
       category: '🎨 Appearance',
       items: [
+        { keys: ['D'], description: 'Toggle dark mode' },
         { keys: ['Ctrl', 'Shift', 'T'], description: 'Cycle through themes' },
       ]
     },
