@@ -131,7 +131,7 @@ function App() {
 
   // Journal handlers
   const handleSaveJournal = async (date, entry) => {
-    const dateKey = date.toDateString();
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     setJournalEntries(prev => ({
       ...prev,
       [dateKey]: entry
