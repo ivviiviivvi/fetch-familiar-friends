@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import CalendarCard from './components/calendar/CalendarCard';
 import ThemeSelector from './components/calendar/ThemeSelector';
 import DateNavigation from './components/calendar/DateNavigation';
+import MonthCalendar from './components/calendar/MonthCalendar';
 import ErrorBoundary from './components/ErrorBoundary';
 import JournalModal from './components/modals/JournalModal';
 import AiModal from './components/modals/AiModal';
@@ -20,6 +21,7 @@ function App() {
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [showMonthView, setShowMonthView] = useState(false);
 
   // Data states
   const [favorites, setFavorites] = useState([]);
@@ -179,10 +181,11 @@ function App() {
 
   useThemeCycleShortcut(handleCycleTheme, !anyModalOpen);
 
-  // Help shortcut (always active except when typing)
+  // Help and view toggle shortcuts (always active except when typing)
   useKeyboardShortcuts({
     '?': () => setIsShortcutsOpen(true),
     'shift+/': () => setIsShortcutsOpen(true),
+    'm': () => setShowMonthView(!showMonthView),
   }, !anyModalOpen);
 
   return (
@@ -194,6 +197,14 @@ function App() {
               DogTale Daily
             </h1>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-2">
+              <button
+                onClick={() => setShowMonthView(!showMonthView)}
+                className="p-2 bg-white/50 hover:bg-white/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={showMonthView ? 'Show day view' : 'Show month view'}
+                title={showMonthView ? 'Show day view (M)' : 'Show month view (M)'}
+              >
+                <span className="text-xl">{showMonthView ? '📅' : '📆'}</span>
+              </button>
               <button
                 onClick={() => setIsShortcutsOpen(true)}
                 className="p-2 bg-white/50 hover:bg-white/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -217,29 +228,45 @@ function App() {
             Your daily dose of dog joy 🐾
           </p>
 
-          <DateNavigation
-            currentDate={currentDate}
-            onDateChange={setCurrentDate}
-          />
+          {!showMonthView && (
+            <DateNavigation
+              currentDate={currentDate}
+              onDateChange={setCurrentDate}
+            />
+          )}
 
-          <ThemeSelector
-            currentTheme={theme}
-            onThemeChange={setTheme}
-            themes={themes}
-          />
+          {!showMonthView && (
+            <ThemeSelector
+              currentTheme={theme}
+              onThemeChange={setTheme}
+              themes={themes}
+            />
+          )}
 
-          <CalendarCard
-            date={currentDate}
-            theme={theme}
-            onJournalClick={handleJournalClick}
-            onAiClick={handleAiClick}
-            onFavoritesClick={handleFavoritesClick}
-            onImageLoad={setCurrentImage}
-            onFavoriteToggle={handleAddFavorite}
-            isFavorited={isCurrentImageFavorited}
-            journalEntry={currentJournalEntry}
-            favoriteCount={favorites.length}
-          />
+          {showMonthView ? (
+            <MonthCalendar
+              currentDate={currentDate}
+              journalEntries={journalEntries}
+              favorites={favorites}
+              onDateSelect={(date) => {
+                setCurrentDate(date);
+                setShowMonthView(false);
+              }}
+            />
+          ) : (
+            <CalendarCard
+              date={currentDate}
+              theme={theme}
+              onJournalClick={handleJournalClick}
+              onAiClick={handleAiClick}
+              onFavoritesClick={handleFavoritesClick}
+              onImageLoad={setCurrentImage}
+              onFavoriteToggle={handleAddFavorite}
+              isFavorited={isCurrentImageFavorited}
+              journalEntry={currentJournalEntry}
+              favoriteCount={favorites.length}
+            />
+          )}
         </div>
       </div>
 

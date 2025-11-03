@@ -9,6 +9,7 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
         { keys: ['←', 'H'], description: 'Previous day' },
         { keys: ['→', 'L'], description: 'Next day' },
         { keys: ['T'], description: 'Go to today' },
+        { keys: ['M'], description: 'Toggle month view' },
       ]
     },
     {
