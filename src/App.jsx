@@ -9,6 +9,7 @@ import AiModal from './components/modals/AiModal';
 import FavoritesModal from './components/modals/FavoritesModal';
 import StatisticsModal from './components/modals/StatisticsModal';
 import KeyboardShortcutsModal from './components/modals/KeyboardShortcutsModal';
+import SettingsModal from './components/modals/SettingsModal';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDarkMode } from './hooks/useDarkMode';
 
@@ -23,12 +24,25 @@ function App() {
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showMonthView, setShowMonthView] = useState(false);
 
   // Data states
   const [favorites, setFavorites] = useState([]);
   const [journalEntries, setJournalEntries] = useState({});
   const [currentImage, setCurrentImage] = useState(null);
+  const [settings, setSettings] = useState({
+    autoSave: true,
+    notifications: false,
+    imageQuality: 'high',
+    cacheEnabled: true,
+    preloadImages: true,
+    preloadDays: 3,
+    defaultView: 'day',
+    animationsEnabled: true,
+    compactMode: false,
+    autoTheme: false
+  });
 
   const themes = [
     { name: 'park', label: 'Park', icon: '🌳', gradient: 'from-lime-400 to-emerald-600' },
@@ -47,6 +61,7 @@ function App() {
       const savedFavorites = localStorage.getItem('dogtale-favorites');
       const savedJournalEntries = localStorage.getItem('dogtale-journal');
       const savedTheme = localStorage.getItem('dogtale-theme');
+      const savedSettings = localStorage.getItem('dogtale-settings');
 
       if (savedFavorites) {
         setFavorites(JSON.parse(savedFavorites));
@@ -56,6 +71,9 @@ function App() {
       }
       if (savedTheme) {
         setTheme(savedTheme);
+      }
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
       }
     } catch (error) {
       console.error('Error loading data from localStorage:', error);
@@ -88,6 +106,15 @@ function App() {
       console.error('Error saving theme to localStorage:', error);
     }
   }, [theme]);
+
+  // Save settings to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('dogtale-settings', JSON.stringify(settings));
+    } catch (error) {
+      console.error('Error saving settings to localStorage:', error);
+    }
+  }, [settings]);
 
   // Modal handlers
   const handleJournalClick = () => {
@@ -130,6 +157,11 @@ function App() {
     setFavorites([]);
   };
 
+  // Settings handler
+  const handleSettingsChange = (newSettings) => {
+    setSettings(newSettings);
+  };
+
   // Check if current image is favorited
   const isCurrentImageFavorited = currentImage && favorites.some(fav => fav.url === currentImage.url);
 
@@ -164,7 +196,7 @@ function App() {
   };
 
   // Keyboard shortcuts (only active when no modal is open)
-  const anyModalOpen = isJournalOpen || isAiOpen || isFavoritesOpen || isStatsOpen || isShortcutsOpen;
+  const anyModalOpen = isJournalOpen || isAiOpen || isFavoritesOpen || isStatsOpen || isShortcutsOpen || isSettingsOpen;
 
   useNavigationShortcuts({
     onPrevious: handlePreviousDay,
@@ -183,12 +215,13 @@ function App() {
 
   useThemeCycleShortcut(handleCycleTheme, !anyModalOpen);
 
-  // Help, view toggle, and dark mode shortcuts (always active except when typing)
+  // Help, view toggle, dark mode, and settings shortcuts (always active except when typing)
   useKeyboardShortcuts({
     '?': () => setIsShortcutsOpen(true),
     'shift+/': () => setIsShortcutsOpen(true),
     'm': () => setShowMonthView(!showMonthView),
     'd': toggleDarkMode,
+    ',': () => setIsSettingsOpen(true),
   }, !anyModalOpen);
 
   return (
@@ -223,6 +256,14 @@ function App() {
                 title="Keyboard shortcuts (?)"
               >
                 <span className="text-xl">⌨️</span>
+              </button>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Settings"
+                title="Settings (,)"
+              >
+                <span className="text-xl">⚙️</span>
               </button>
               <button
                 onClick={() => setIsStatsOpen(true)}
@@ -315,6 +356,13 @@ function App() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={settings}
+        onSettingsChange={handleSettingsChange}
       />
     </ErrorBoundary>
   );

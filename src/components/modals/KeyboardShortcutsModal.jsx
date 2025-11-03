@@ -19,6 +19,7 @@ const KeyboardShortcutsModal = ({ isOpen, onClose }) => {
         { keys: ['A'], description: 'Open AI Chat' },
         { keys: ['F'], description: 'Open Favorites' },
         { keys: ['S'], description: 'Open Statistics' },
+        { keys: [','], description: 'Open Settings' },
         { keys: ['?'], description: 'Show keyboard shortcuts (this dialog)' },
       ]
     },
