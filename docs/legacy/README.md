@@ -28,11 +28,19 @@ This represents an early prototype that took a different architectural approach 
 
 ### Usage
 
-To run the preserved application:
+**⚠️ SECURITY WARNING**: This archived application exposes API keys in client-side JavaScript, which is a security vulnerability. This is preserved for historical reference only and should not be used as-is in production.
+
+To run the preserved application (for reference only):
 
 1. Open `ai-pawsitive-dog-care-schedule.html` in a web browser
 2. Follow the setup instructions in `ai-pawsitive-README.md` for API key configuration
 3. Note: The application expects a `config.js` file with a Gemini API key
+
+**For production use**, implement proper API key security using:
+- Server-side API proxy
+- Environment variables
+- OAuth authentication
+- Backend API endpoints that handle sensitive keys
 
 ## Historical Context
 
