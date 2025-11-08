@@ -4,6 +4,11 @@ import { motion } from 'framer-motion';
 import ActivityFeed from './ActivityFeed';
 import FriendsList from './FriendsList';
 import PetProfile from './PetProfile';
+import NearbyPetParents from './NearbyPetParents';
+import CareInstructions from './CareInstructions';
+import ARCamera from './ARCamera';
+import VirtualPet from './VirtualPet';
+import PetMemorial from './PetMemorial';
 import { generateMockFriends, generateActivityFeed } from '../../utils/socialData';
 import { generateMockPet } from '../../utils/petData';
 
@@ -22,9 +27,14 @@ function SocialHub({ onClose }) {
   }, []);
 
   const tabs = [
-    { id: 'feed', name: 'Activity Feed', icon: '📰' },
+    { id: 'feed', name: 'Feed', icon: '📰' },
     { id: 'friends', name: 'Friends', icon: '👥' },
-    { id: 'profile', name: 'My Pet', icon: '🐾' },
+    { id: 'nearby', name: 'Nearby', icon: '📍' },
+    { id: 'care', name: 'Care', icon: '📋' },
+    { id: 'ar', name: 'AR', icon: '📱' },
+    { id: 'virtual', name: 'Virtual', icon: '✨' },
+    { id: 'profile', name: 'Profile', icon: '🐾' },
+    { id: 'memorial', name: 'Memorial', icon: '🌈' },
   ];
 
   return (
@@ -52,12 +62,12 @@ function SocialHub({ onClose }) {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mt-6">
+          <div className="flex gap-2 mt-6 overflow-x-auto pb-2">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-white text-blue-600'
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -74,7 +84,12 @@ function SocialHub({ onClose }) {
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
           {activeTab === 'feed' && <ActivityFeed activities={activities} />}
           {activeTab === 'friends' && <FriendsList friends={friends} />}
+          {activeTab === 'nearby' && <NearbyPetParents />}
+          {activeTab === 'care' && userPet && <CareInstructions pet={userPet} />}
+          {activeTab === 'ar' && <ARCamera />}
+          {activeTab === 'virtual' && <VirtualPet realPet={userPet} />}
           {activeTab === 'profile' && userPet && <PetProfile pet={userPet} />}
+          {activeTab === 'memorial' && <PetMemorial />}
         </div>
       </motion.div>
     </div>
