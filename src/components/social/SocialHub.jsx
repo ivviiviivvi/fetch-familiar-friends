@@ -9,6 +9,11 @@ import CareInstructions from './CareInstructions';
 import ARCamera from './ARCamera';
 import VirtualPet from './VirtualPet';
 import PetMemorial from './PetMemorial';
+import EnhancedMemorial from './EnhancedMemorial';
+import CoachingHub from './CoachingHub';
+import VetTelemedicine from './VetTelemedicine';
+import SubscriptionTiers from './SubscriptionTiers';
+import GameplayHub from './GameplayHub';
 import { generateMockFriends, generateActivityFeed } from '../../utils/socialData';
 import { generateMockPet } from '../../utils/petData';
 
@@ -28,13 +33,17 @@ function SocialHub({ onClose }) {
 
   const tabs = [
     { id: 'feed', name: 'Feed', icon: '📰' },
+    { id: 'gameplay', name: 'Quests', icon: '🎮' },
     { id: 'friends', name: 'Friends', icon: '👥' },
     { id: 'nearby', name: 'Nearby', icon: '📍' },
+    { id: 'coaching', name: 'Coaches', icon: '🏋️' },
+    { id: 'vet', name: '24/7 Vet', icon: '🏥' },
     { id: 'care', name: 'Care', icon: '📋' },
     { id: 'ar', name: 'AR', icon: '📱' },
     { id: 'virtual', name: 'Virtual', icon: '✨' },
     { id: 'profile', name: 'Profile', icon: '🐾' },
     { id: 'memorial', name: 'Memorial', icon: '🌈' },
+    { id: 'subscribe', name: 'Premium', icon: '👑' },
   ];
 
   return (
@@ -83,13 +92,17 @@ function SocialHub({ onClose }) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
           {activeTab === 'feed' && <ActivityFeed activities={activities} />}
+          {activeTab === 'gameplay' && <GameplayHub />}
           {activeTab === 'friends' && <FriendsList friends={friends} />}
           {activeTab === 'nearby' && <NearbyPetParents />}
+          {activeTab === 'coaching' && <CoachingHub />}
+          {activeTab === 'vet' && <VetTelemedicine />}
           {activeTab === 'care' && userPet && <CareInstructions pet={userPet} />}
           {activeTab === 'ar' && <ARCamera />}
           {activeTab === 'virtual' && <VirtualPet realPet={userPet} />}
           {activeTab === 'profile' && userPet && <PetProfile pet={userPet} />}
-          {activeTab === 'memorial' && <PetMemorial />}
+          {activeTab === 'memorial' && <EnhancedMemorial pet={userPet} />}
+          {activeTab === 'subscribe' && <SubscriptionTiers />}
         </div>
       </motion.div>
     </div>
