@@ -7,6 +7,7 @@ Thank you for using fetch-familiar-friends! If you need help or have questions, 
 ### 📖 Documentation
 
 Before seeking help, please check our documentation:
+
 - [README.md](../README.md) - Project overview and getting started guide
 - [CONTRIBUTING.md](../CONTRIBUTING.md) - Development setup and contribution guidelines
 - [Documentation](../docs/PROJECT.md) - Detailed project documentation
