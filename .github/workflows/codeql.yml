@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '34 4 * * 0'
+    - cron: '34 4 * * *'  # Daily at 4:34 AM UTC
 
 jobs:
   analyze:

@@ -49,11 +49,11 @@ jobs:
           exempt-all-milestones: true
 
           # Only close if no assignees
-          exempt-all-assignees: true
+          exempt-all-assignees: false
 
           # Comment processing
           remove-stale-when-updated: true
-          delete-branch: true
+          delete-branch: false
 
           # Limits
           operations-per-run: 100

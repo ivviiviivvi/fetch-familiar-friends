@@ -2,7 +2,7 @@
 
 ## Getting Help
 
-Thank you for using DogTale Daily! If you need help or have questions, here are the best ways to get support:
+Thank you for using fetch-familiar-friends! If you need help or have questions, here are the best ways to get support:
 
 ### 📖 Documentation
 
@@ -38,7 +38,7 @@ For general questions, ideas, or community discussion:
 
 **Do not report security vulnerabilities through public GitHub issues.**
 
-If you discover a security vulnerability, please see our [Security Policy](SECURITY.md) for information on how to report it responsibly.
+If you discover a security vulnerability, please see our [Security Policy](../SECURITY_POLICY.md) for information on how to report it responsibly.
 
 ### 📧 Contact
 
