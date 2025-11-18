@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import CalendarCard from './components/calendar/CalendarCard';
 import ThemeSelector from './components/calendar/ThemeSelector';
 import DateNavigation from './components/calendar/DateNavigation';
@@ -10,8 +11,10 @@ import FavoritesModal from './components/modals/FavoritesModal';
 import StatisticsModal from './components/modals/StatisticsModal';
 import KeyboardShortcutsModal from './components/modals/KeyboardShortcutsModal';
 import SettingsModal from './components/modals/SettingsModal';
+import AuthModal from './components/modals/AuthModal';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDarkMode } from './hooks/useDarkMode';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -25,6 +28,7 @@ function App() {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [showMonthView, setShowMonthView] = useState(false);
 
   // Data states
@@ -196,7 +200,7 @@ function App() {
   };
 
   // Keyboard shortcuts (only active when no modal is open)
-  const anyModalOpen = isJournalOpen || isAiOpen || isFavoritesOpen || isStatsOpen || isShortcutsOpen || isSettingsOpen;
+  const anyModalOpen = isJournalOpen || isAiOpen || isFavoritesOpen || isStatsOpen || isShortcutsOpen || isSettingsOpen || isAuthOpen;
 
   useNavigationShortcuts({
     onPrevious: handlePreviousDay,
@@ -232,6 +236,9 @@ function App() {
             <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100 transition-colors">
               DogTale Daily
             </h1>
+            <div className="absolute left-0 top-1/2 -translate-y-1/2">
+              <UserProfileButton onSignInClick={() => setIsAuthOpen(true)} />
+            </div>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-2">
               <button
                 onClick={toggleDarkMode}
@@ -365,8 +372,96 @@ function App() {
         settings={settings}
         onSettingsChange={handleSettingsChange}
       />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+      />
     </ErrorBoundary>
   );
 }
 
-export default App;
+// User Profile Button Component
+function UserProfileButton({ onSignInClick }) {
+  const { user, signOut } = useAuth();
+  const [showMenu, setShowMenu] = useState(false);
+
+  if (!user) {
+    return (
+      <button
+        onClick={onSignInClick}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        title="Sign in to sync your data"
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <span className="hidden sm:inline">Sign In</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className="flex items-center gap-2 px-3 py-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        title={user.displayName || user.email}
+      >
+        {user.photoURL ? (
+          <img src={user.photoURL} alt={user.displayName} className="w-8 h-8 rounded-full" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+            {(user.displayName || user.email || '?')[0].toUpperCase()}
+          </div>
+        )}
+        <span className="hidden sm:inline text-gray-800 dark:text-gray-100">
+          {user.displayName || user.email?.split('@')[0]}
+        </span>
+      </button>
+
+      {showMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowMenu(false)}
+          ></div>
+          <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 border border-gray-200 dark:border-gray-700">
+            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                {user.displayName || 'User'}
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                {user.email}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                signOut();
+                setShowMenu(false);
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+UserProfileButton.propTypes = {
+  onSignInClick: PropTypes.func.isRequired
+};
+
+// Wrap App with AuthProvider
+function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}
+
+export default AppWithAuth;

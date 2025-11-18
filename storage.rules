@@ -1,0 +1,124 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // =========================================================================
+    // Helper Functions
+    // =========================================================================
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validate image file type
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // Validate file size (max 10MB for images)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // =========================================================================
+    // User Profile Photos
+    // =========================================================================
+
+    match /users/{userId}/profile/{fileName} {
+      // Users can read any profile photo
+      allow read: if isAuthenticated();
+
+      // Users can only upload/update/delete their own profile photos
+      allow write: if isOwner(userId) &&
+                      isImage() &&
+                      isValidSize();
+    }
+
+    // =========================================================================
+    // Pet Photos
+    // =========================================================================
+
+    match /users/{userId}/pets/{petId}/photos/{fileName} {
+      // Users can read any pet photo
+      allow read: if isAuthenticated();
+
+      // Users can only upload/update/delete their own pet photos
+      allow write: if isOwner(userId) &&
+                      isImage() &&
+                      isValidSize();
+    }
+
+    // =========================================================================
+    // Pet Photo Thumbnails (auto-generated)
+    // =========================================================================
+
+    match /users/{userId}/pets/{petId}/thumbnails/{fileName} {
+      // Users can read any thumbnail
+      allow read: if isAuthenticated();
+
+      // Only Cloud Functions can write thumbnails
+      // (Generated server-side after image upload)
+      allow write: if false;
+    }
+
+    // =========================================================================
+    // Post Images (for social features)
+    // =========================================================================
+
+    match /posts/{userId}/{postId}/{fileName} {
+      // Anyone authenticated can read post images
+      allow read: if isAuthenticated();
+
+      // Users can only upload their own post images
+      allow write: if isOwner(userId) &&
+                      isImage() &&
+                      isValidSize();
+    }
+
+    // =========================================================================
+    // Group Images (for community groups)
+    // =========================================================================
+
+    match /groups/{groupId}/posts/{postId}/{fileName} {
+      // Anyone authenticated can read group images
+      allow read: if isAuthenticated();
+
+      // Users can upload images to group posts
+      allow create: if isAuthenticated() &&
+                      isImage() &&
+                      isValidSize();
+
+      // Users can delete their own images
+      allow delete: if isAuthenticated();
+    }
+
+    // =========================================================================
+    // Memorial Photos
+    // =========================================================================
+
+    match /memorials/{memorialId}/photos/{fileName} {
+      // Anyone authenticated can read memorial photos
+      allow read: if isAuthenticated();
+
+      // Memorial photos can be uploaded/updated/deleted by owner
+      allow write: if isAuthenticated() &&
+                      isImage() &&
+                      isValidSize();
+    }
+
+    // =========================================================================
+    // Default: Deny all other access
+    // =========================================================================
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
