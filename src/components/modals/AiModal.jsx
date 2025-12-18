@@ -97,11 +97,11 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   };
 
   const handleSend = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || inputMessage.length > 500) return;
 
     const userMessage = {
       role: 'user',
-      content: inputMessage
+      content: inputMessage.slice(0, 500) // Ensure max length
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -224,6 +224,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
             placeholder="Ask me anything about dogs..."
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isTyping}
+            maxLength={500}
             aria-label="Message input"
           />
           <button
