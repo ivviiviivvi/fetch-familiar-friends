@@ -79,6 +79,11 @@ class HistoryParser {
       'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might',
       'can', 'this', 'that', 'these', 'those', 'it', 'its'
     ]);
+
+    this.outputArtifacts = new Set([
+      'HISTORICAL_MANIFEST.md',
+      'HISTORICAL_MANIFEST.json'
+    ]);
   }
 
   /**
@@ -96,7 +101,7 @@ class HistoryParser {
         if (file !== 'node_modules' && file !== '.git') {
           this.findMarkdownFiles(filePath, fileList);
         }
-      } else if (file.endsWith('.md')) {
+      } else if (file.endsWith('.md') && !this.outputArtifacts.has(file)) {
         fileList.push(filePath);
       }
     });
