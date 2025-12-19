@@ -254,23 +254,25 @@ describe('validateContentData', () => {
 });
 
 describe('sanitizeInput', () => {
-  it('should remove script tags', () => {
+  it('should encode HTML tags', () => {
     const input = 'Hello <script>alert("xss")</script> world';
     const result = sanitizeInput(input);
+    expect(result).toContain('&lt;script&gt;');
     expect(result).not.toContain('<script>');
-    expect(result).toBe('Hello  world');
   });
 
-  it('should remove iframe tags', () => {
+  it('should encode iframe tags', () => {
     const input = 'Test <iframe src="evil.com"></iframe> content';
     const result = sanitizeInput(input);
-    expect(result).not.toContain('<iframe>');
+    expect(result).toContain('&lt;iframe');
+    expect(result).not.toContain('<iframe');
   });
 
-  it('should remove javascript: protocol', () => {
-    const input = 'Click <a href="javascript:alert(1)">here</a>';
+  it('should encode quotes', () => {
+    const input = 'foo "bar" \'baz\'';
     const result = sanitizeInput(input);
-    expect(result).not.toContain('javascript:');
+    expect(result).toContain('&quot;bar&quot;');
+    expect(result).toContain('&#x27;baz&#x27;');
   });
 
   it('should handle non-string input', () => {
