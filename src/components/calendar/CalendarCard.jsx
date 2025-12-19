@@ -1,8 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAllDailyContent } from '../../utils/dailyContent';
 import { getCachedImage, cacheImage, preloadNearbyDates } from '../../utils/imageCache';
+
+// Theme gradients
+const themeGradients = {
+  park: 'from-lime-400 to-emerald-600',
+  beach: 'from-sky-400 to-blue-600',
+  forest: 'from-green-500 to-green-800',
+  tundra: 'from-cyan-400 to-sky-700',
+  sunset: 'from-orange-400 to-pink-600',
+  night: 'from-indigo-500 to-purple-800',
+  snow: 'from-blue-100 to-cyan-300',
+  autumn: 'from-yellow-600 to-red-700'
+};
 
 const CalendarCard = ({
   date,
@@ -28,18 +40,6 @@ const CalendarCard = ({
 
   const MAX_RETRIES = 3;
   const FETCH_TIMEOUT = 10000; // 10 seconds
-
-  // Theme gradients
-  const themeGradients = {
-    park: 'from-lime-400 to-emerald-600',
-    beach: 'from-sky-400 to-blue-600',
-    forest: 'from-green-500 to-green-800',
-    tundra: 'from-cyan-400 to-sky-700',
-    sunset: 'from-orange-400 to-pink-600',
-    night: 'from-indigo-500 to-purple-800',
-    snow: 'from-blue-100 to-cyan-300',
-    autumn: 'from-yellow-600 to-red-700'
-  };
 
   // Fetch daily image with caching
   useEffect(() => {
@@ -224,11 +224,11 @@ const CalendarCard = ({
     return date.toLocaleDateString('en-US', options);
   };
 
-  const handleFavoriteClick = () => {
+  const handleFavoriteClick = useCallback(() => {
     if (todayImage && onFavoriteToggle) {
       onFavoriteToggle(todayImage, isFlipped ? 'cat' : 'dog');
     }
-  };
+  }, [todayImage, onFavoriteToggle, isFlipped]);
 
   return (
     <motion.div
@@ -467,4 +467,5 @@ CalendarCard.defaultProps = {
   settings: null
 };
 
-export default CalendarCard;
+// Optimization: Memoize the component to prevent unnecessary re-renders
+export default memo(CalendarCard);
