@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import CalendarCard from './components/calendar/CalendarCard';
 import ThemeSelector from './components/calendar/ThemeSelector';
 import DateNavigation from './components/calendar/DateNavigation';
@@ -12,6 +12,18 @@ import KeyboardShortcutsModal from './components/modals/KeyboardShortcutsModal';
 import SettingsModal from './components/modals/SettingsModal';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDarkMode } from './hooks/useDarkMode';
+
+// Optimization: Define static themes outside component
+const themes = [
+  { name: 'park', label: 'Park', icon: '🌳', gradient: 'from-lime-400 to-emerald-600' },
+  { name: 'beach', label: 'Beach', icon: '🏖️', gradient: 'from-sky-400 to-blue-600' },
+  { name: 'forest', label: 'Forest', icon: '🌲', gradient: 'from-green-500 to-green-800' },
+  { name: 'tundra', label: 'Tundra', icon: '❄️', gradient: 'from-cyan-400 to-sky-700' },
+  { name: 'sunset', label: 'Sunset', icon: '🌅', gradient: 'from-orange-400 to-pink-600' },
+  { name: 'night', label: 'Night', icon: '🌙', gradient: 'from-indigo-500 to-purple-800' },
+  { name: 'snow', label: 'Snow', icon: '🌨️', gradient: 'from-blue-100 to-cyan-300' },
+  { name: 'autumn', label: 'Autumn', icon: '🍂', gradient: 'from-yellow-600 to-red-700' }
+];
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -43,17 +55,6 @@ function App() {
     compactMode: false,
     autoTheme: false
   });
-
-  const themes = [
-    { name: 'park', label: 'Park', icon: '🌳', gradient: 'from-lime-400 to-emerald-600' },
-    { name: 'beach', label: 'Beach', icon: '🏖️', gradient: 'from-sky-400 to-blue-600' },
-    { name: 'forest', label: 'Forest', icon: '🌲', gradient: 'from-green-500 to-green-800' },
-    { name: 'tundra', label: 'Tundra', icon: '❄️', gradient: 'from-cyan-400 to-sky-700' },
-    { name: 'sunset', label: 'Sunset', icon: '🌅', gradient: 'from-orange-400 to-pink-600' },
-    { name: 'night', label: 'Night', icon: '🌙', gradient: 'from-indigo-500 to-purple-800' },
-    { name: 'snow', label: 'Snow', icon: '🌨️', gradient: 'from-blue-100 to-cyan-300' },
-    { name: 'autumn', label: 'Autumn', icon: '🍂', gradient: 'from-yellow-600 to-red-700' }
-  ];
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -116,18 +117,18 @@ function App() {
     }
   }, [settings]);
 
-  // Modal handlers
-  const handleJournalClick = () => {
+  // Optimization: Memoize handlers to prevent re-renders of child components
+  const handleJournalClick = useCallback(() => {
     setIsJournalOpen(true);
-  };
+  }, []);
 
-  const handleAiClick = () => {
+  const handleAiClick = useCallback(() => {
     setIsAiOpen(true);
-  };
+  }, []);
 
-  const handleFavoritesClick = () => {
+  const handleFavoritesClick = useCallback(() => {
     setIsFavoritesOpen(true);
-  };
+  }, []);
 
   // Journal handlers
   const handleSaveJournal = async (date, entry) => {
@@ -139,7 +140,8 @@ function App() {
   };
 
   // Favorites handlers
-  const handleAddFavorite = (imageUrl, imageType) => {
+  // Optimization: Memoize to prevent re-renders of CalendarCard
+  const handleAddFavorite = useCallback((imageUrl, imageType) => {
     const newFavorite = {
       id: Date.now().toString(),
       url: imageUrl,
@@ -147,7 +149,7 @@ function App() {
       savedAt: Date.now()
     };
     setFavorites(prev => [newFavorite, ...prev]);
-  };
+  }, []);
 
   const handleRemoveFavorite = (id) => {
     setFavorites(prev => prev.filter(fav => fav.id !== id));
