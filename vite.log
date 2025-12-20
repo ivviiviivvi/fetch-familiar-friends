@@ -1,0 +1,11 @@
+
+> dogtale-daily@0.2.0 dev /app
+> vite
+
+Port 3000 is in use, trying another one...
+Port 3001 is in use, trying another one...
+
+  VITE v7.3.0  ready in 283 ms
+
+  ➜  Local:   http://localhost:3002/
+  ➜  Network: use --host to expose
