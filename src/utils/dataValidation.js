@@ -6,6 +6,7 @@
  * - Content validation (facts, quotes, moods)
  * - Schema validation
  * - Type checking
+ * - Input sanitization and security checks
  */
 
 /**
