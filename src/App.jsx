@@ -15,7 +15,13 @@ import { useDarkMode } from './hooks/useDarkMode';
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [theme, setTheme] = useState('park');
+  const [theme, setTheme] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem('dogtale-theme');
+      return savedTheme || 'park';
+    } catch { return 'park'; }
+  });
+
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   // Modal states
@@ -28,20 +34,51 @@ function App() {
   const [showMonthView, setShowMonthView] = useState(false);
 
   // Data states
-  const [favorites, setFavorites] = useState([]);
-  const [journalEntries, setJournalEntries] = useState({});
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dogtale-favorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  const [journalEntries, setJournalEntries] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dogtale-journal');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
   const [currentImage, setCurrentImage] = useState(null);
-  const [settings, setSettings] = useState({
-    autoSave: true,
-    notifications: false,
-    imageQuality: 'high',
-    cacheEnabled: true,
-    preloadImages: true,
-    preloadDays: 3,
-    defaultView: 'day',
-    animationsEnabled: true,
-    compactMode: false,
-    autoTheme: false
+
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dogtale-settings');
+      return saved ? JSON.parse(saved) : {
+        autoSave: true,
+        notifications: false,
+        imageQuality: 'high',
+        cacheEnabled: true,
+        preloadImages: true,
+        preloadDays: 3,
+        defaultView: 'day',
+        animationsEnabled: true,
+        compactMode: false,
+        autoTheme: false
+      };
+    } catch {
+      return {
+        autoSave: true,
+        notifications: false,
+        imageQuality: 'high',
+        cacheEnabled: true,
+        preloadImages: true,
+        preloadDays: 3,
+        defaultView: 'day',
+        animationsEnabled: true,
+        compactMode: false,
+        autoTheme: false
+      };
+    }
   });
 
   const themes = [
@@ -55,30 +92,6 @@ function App() {
     { name: 'autumn', label: 'Autumn', icon: '🍂', gradient: 'from-yellow-600 to-red-700' }
   ];
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedFavorites = localStorage.getItem('dogtale-favorites');
-      const savedJournalEntries = localStorage.getItem('dogtale-journal');
-      const savedTheme = localStorage.getItem('dogtale-theme');
-      const savedSettings = localStorage.getItem('dogtale-settings');
-
-      if (savedFavorites) {
-        setFavorites(JSON.parse(savedFavorites));
-      }
-      if (savedJournalEntries) {
-        setJournalEntries(JSON.parse(savedJournalEntries));
-      }
-      if (savedTheme) {
-        setTheme(savedTheme);
-      }
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      }
-    } catch (error) {
-      console.error('Error loading data from localStorage:', error);
-    }
-  }, []);
 
   useEffect(() => {
     try {
