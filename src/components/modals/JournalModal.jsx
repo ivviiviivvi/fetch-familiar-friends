@@ -189,11 +189,14 @@ const JournalModal = ({ isOpen, onClose, date, initialEntry = '', onSave, allEnt
           /* EDIT MODE */
           <>
             <div className="text-center">
-              <p className="text-lg font-medium text-gray-700">{formatDate()}</p>
+              <label htmlFor="journal-entry" className="block text-lg font-medium text-gray-700 cursor-pointer">
+                {formatDate()}
+              </label>
             </div>
 
             <div className="relative">
               <textarea
+                id="journal-entry"
                 value={entry}
                 onChange={handleChange}
                 placeholder="Write about your day with your furry friend..."
