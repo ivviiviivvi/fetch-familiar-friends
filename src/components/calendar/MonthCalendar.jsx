@@ -1,12 +1,100 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 
 // Static data defined outside component to avoid recreation
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) => {
+// Memoized day component to prevent unnecessary re-renders of all 42 cells
+const CalendarDay = memo(function CalendarDay({
+  dayData,
+  hasJournal,
+  hasFavorite,
+  isCurrentDay,
+  isSelectedDay,
+  isFutureDay,
+  onClick
+}) {
+  // Use useCallback to keep the click handler stable, although onClick is stable
+  const handleClick = useCallback(() => {
+    onClick(dayData.date);
+  }, [onClick, dayData.date]);
+
+  return (
+    <motion.button
+      onClick={handleClick}
+      disabled={isFutureDay}
+      whileHover={!isFutureDay ? { scale: 1.05 } : {}}
+      whileTap={!isFutureDay ? { scale: 0.95 } : {}}
+      className={`
+        relative aspect-square p-2 rounded-lg text-center transition-all
+        ${!dayData.isCurrentMonth ? 'text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-200'}
+        ${isCurrentDay ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
+        ${isSelectedDay ? 'bg-blue-500 dark:bg-blue-600 text-white font-bold' : ''}
+        ${!isSelectedDay && dayData.isCurrentMonth && !isFutureDay ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : ''}
+        ${isFutureDay ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
+        ${!isFutureDay && !isSelectedDay ? 'focus:outline-none focus:ring-2 focus:ring-blue-400' : ''}
+      `}
+      aria-label={`${dayData.date.toLocaleDateString()}`}
+      title={`${dayData.date.toLocaleDateString()}${hasJournal ? ' (has journal)' : ''}${hasFavorite ? ' (has favorites)' : ''}`}
+    >
+      <div className="text-sm font-medium">{dayData.day}</div>
+
+      {/* Indicators */}
+      {(hasJournal || hasFavorite) && (
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+          {hasJournal && (
+            <div
+              className={`w-1.5 h-1.5 rounded-full ${
+                isSelectedDay ? 'bg-white' : 'bg-green-500'
+              }`}
+              aria-label="Has journal entry"
+            />
+          )}
+          {hasFavorite && (
+            <div
+              className={`w-1.5 h-1.5 rounded-full ${
+                isSelectedDay ? 'bg-yellow-200' : 'bg-yellow-500'
+              }`}
+              aria-label="Has favorite"
+            />
+          )}
+        </div>
+      )}
+    </motion.button>
+  );
+});
+
+CalendarDay.propTypes = {
+  dayData: PropTypes.object.isRequired,
+  hasJournal: PropTypes.bool,
+  hasFavorite: PropTypes.bool,
+  isCurrentDay: PropTypes.bool,
+  isSelectedDay: PropTypes.bool,
+  isFutureDay: PropTypes.bool,
+  onClick: PropTypes.func.isRequired
+};
+
+const MonthCalendar = memo(function MonthCalendar({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) {
   const [viewDate, setViewDate] = useState(new Date(currentDate));
+
+  // Pre-calculate today to avoid creating new Date() 42 times per render
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []); // Stable 'today' reference
+
+  // Optimization: Pre-calculate favorite dates to avoid O(N*M) loop inside render
+  const favoriteDates = useMemo(() => {
+    const dates = new Set();
+    favorites.forEach(fav => {
+      if (fav.savedAt) {
+        dates.add(new Date(fav.savedAt).toDateString());
+      }
+    });
+    return dates;
+  }, [favorites]);
 
   // Get calendar data for the month
   const calendarData = useMemo(() => {
@@ -71,37 +159,30 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
   }, [viewDate]);
 
   // Check if a date has journal entry
-  const hasJournalEntry = (date) => {
+  const hasJournalEntry = useCallback((date) => {
     const dateKey = date.toDateString();
     return journalEntries[dateKey] && journalEntries[dateKey].trim().length > 0;
-  };
+  }, [journalEntries]);
 
-  // Check if a date has favorites
-  const hasFavorite = (date) => {
-    const dateStr = date.toDateString();
-    return favorites.some(fav => {
-      const favDate = new Date(fav.savedAt).toDateString();
-      return favDate === dateStr;
-    });
-  };
+  // Check if a date has favorites - optimized with Set
+  const hasFavorite = useCallback((date) => {
+    return favoriteDates.has(date.toDateString());
+  }, [favoriteDates]);
 
   // Check if date is today
-  const isToday = (date) => {
-    const today = new Date();
+  const isToday = useCallback((date) => {
     return date.toDateString() === today.toDateString();
-  };
+  }, [today]);
 
   // Check if date is selected
-  const isSelected = (date) => {
+  const isSelected = useCallback((date) => {
     return date.toDateString() === currentDate.toDateString();
-  };
+  }, [currentDate]);
 
   // Check if date is in the future
-  const isFuture = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const isFuture = useCallback((date) => {
     return date > today;
-  };
+  }, [today]);
 
   const handlePrevMonth = () => {
     const newDate = new Date(viewDate);
@@ -119,11 +200,11 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
     setViewDate(new Date());
   };
 
-  const handleDateClick = (date) => {
+  const handleDateClick = useCallback((date) => {
     if (!isFuture(date) && onDateSelect) {
       onDateSelect(date);
     }
-  };
+  }, [isFuture, onDateSelect]);
 
   const formatMonthYear = () => {
     return viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -179,58 +260,18 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
 
       {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-2">
-        {calendarData.map((dayData, index) => {
-          const hasJournal = hasJournalEntry(dayData.date);
-          const hasFav = hasFavorite(dayData.date);
-          const isCurrentDay = isToday(dayData.date);
-          const isSelectedDay = isSelected(dayData.date);
-          const isFutureDay = isFuture(dayData.date);
-
-          return (
-            <motion.button
-              key={index}
-              onClick={() => handleDateClick(dayData.date)}
-              disabled={isFutureDay}
-              whileHover={!isFutureDay ? { scale: 1.05 } : {}}
-              whileTap={!isFutureDay ? { scale: 0.95 } : {}}
-              className={`
-                relative aspect-square p-2 rounded-lg text-center transition-all
-                ${!dayData.isCurrentMonth ? 'text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-200'}
-                ${isCurrentDay ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
-                ${isSelectedDay ? 'bg-blue-500 dark:bg-blue-600 text-white font-bold' : ''}
-                ${!isSelectedDay && dayData.isCurrentMonth && !isFutureDay ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : ''}
-                ${isFutureDay ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
-                ${!isFutureDay && !isSelectedDay ? 'focus:outline-none focus:ring-2 focus:ring-blue-400' : ''}
-              `}
-              aria-label={`${dayData.date.toLocaleDateString()}`}
-              title={`${dayData.date.toLocaleDateString()}${hasJournal ? ' (has journal)' : ''}${hasFav ? ' (has favorites)' : ''}`}
-            >
-              <div className="text-sm font-medium">{dayData.day}</div>
-
-              {/* Indicators */}
-              {(hasJournal || hasFav) && (
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
-                  {hasJournal && (
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        isSelectedDay ? 'bg-white' : 'bg-green-500'
-                      }`}
-                      aria-label="Has journal entry"
-                    />
-                  )}
-                  {hasFav && (
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        isSelectedDay ? 'bg-yellow-200' : 'bg-yellow-500'
-                      }`}
-                      aria-label="Has favorite"
-                    />
-                  )}
-                </div>
-              )}
-            </motion.button>
-          );
-        })}
+        {calendarData.map((dayData, index) => (
+          <CalendarDay
+            key={index}
+            dayData={dayData}
+            hasJournal={hasJournalEntry(dayData.date)}
+            hasFavorite={hasFavorite(dayData.date)}
+            isCurrentDay={isToday(dayData.date)}
+            isSelectedDay={isSelected(dayData.date)}
+            isFutureDay={isFuture(dayData.date)}
+            onClick={handleDateClick}
+          />
+        ))}
       </div>
 
       {/* Legend */}
