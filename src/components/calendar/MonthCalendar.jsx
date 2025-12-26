@@ -4,8 +4,17 @@ import { motion } from 'framer-motion';
 
 // Static data defined outside component to avoid recreation
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const FULL_DAY_NAMES = {
+  Sun: 'Sunday',
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday'
+};
 
-const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) => {
+const MonthCalendar = memo(function MonthCalendar({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) {
   const [viewDate, setViewDate] = useState(new Date(currentDate));
 
   // Get calendar data for the month
@@ -171,6 +180,8 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
           <div
             key={day}
             className="text-center text-sm font-semibold text-gray-600 dark:text-gray-400 py-2"
+            aria-label={FULL_DAY_NAMES[day]}
+            title={FULL_DAY_NAMES[day]}
           >
             {day}
           </div>
