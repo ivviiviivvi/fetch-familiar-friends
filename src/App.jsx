@@ -15,7 +15,18 @@ import { useDarkMode } from './hooks/useDarkMode';
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [theme, setTheme] = useState('park');
+
+  // Data states with lazy initialization from localStorage
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dogtale-theme');
+      return saved || 'park';
+    } catch (error) {
+      console.error('Error loading theme from localStorage:', error);
+      return 'park';
+    }
+  });
+
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   // Modal states
@@ -27,21 +38,49 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showMonthView, setShowMonthView] = useState(false);
 
-  // Data states
-  const [favorites, setFavorites] = useState([]);
-  const [journalEntries, setJournalEntries] = useState({});
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dogtale-favorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error loading favorites from localStorage:', error);
+      return [];
+    }
+  });
+
+  const [journalEntries, setJournalEntries] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dogtale-journal');
+      return saved ? JSON.parse(saved) : {};
+    } catch (error) {
+      console.error('Error loading journal entries from localStorage:', error);
+      return {};
+    }
+  });
+
   const [currentImage, setCurrentImage] = useState(null);
-  const [settings, setSettings] = useState({
-    autoSave: true,
-    notifications: false,
-    imageQuality: 'high',
-    cacheEnabled: true,
-    preloadImages: true,
-    preloadDays: 3,
-    defaultView: 'day',
-    animationsEnabled: true,
-    compactMode: false,
-    autoTheme: false
+
+  const [settings, setSettings] = useState(() => {
+    const defaultSettings = {
+      autoSave: true,
+      notifications: false,
+      imageQuality: 'high',
+      cacheEnabled: true,
+      preloadImages: true,
+      preloadDays: 3,
+      defaultView: 'day',
+      animationsEnabled: true,
+      compactMode: false,
+      autoTheme: false
+    };
+
+    try {
+      const saved = localStorage.getItem('dogtale-settings');
+      return saved ? JSON.parse(saved) : defaultSettings;
+    } catch (error) {
+      console.error('Error loading settings from localStorage:', error);
+      return defaultSettings;
+    }
   });
 
   const themes = [
@@ -54,31 +93,6 @@ function App() {
     { name: 'snow', label: 'Snow', icon: '🌨️', gradient: 'from-blue-100 to-cyan-300' },
     { name: 'autumn', label: 'Autumn', icon: '🍂', gradient: 'from-yellow-600 to-red-700' }
   ];
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedFavorites = localStorage.getItem('dogtale-favorites');
-      const savedJournalEntries = localStorage.getItem('dogtale-journal');
-      const savedTheme = localStorage.getItem('dogtale-theme');
-      const savedSettings = localStorage.getItem('dogtale-settings');
-
-      if (savedFavorites) {
-        setFavorites(JSON.parse(savedFavorites));
-      }
-      if (savedJournalEntries) {
-        setJournalEntries(JSON.parse(savedJournalEntries));
-      }
-      if (savedTheme) {
-        setTheme(savedTheme);
-      }
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      }
-    } catch (error) {
-      console.error('Error loading data from localStorage:', error);
-    }
-  }, []);
 
   useEffect(() => {
     try {
