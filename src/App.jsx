@@ -13,6 +13,17 @@ import SettingsModal from './components/modals/SettingsModal';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDarkMode } from './hooks/useDarkMode';
 
+const themes = [
+  { name: 'park', label: 'Park', icon: '🌳', gradient: 'from-lime-400 to-emerald-600' },
+  { name: 'beach', label: 'Beach', icon: '🏖️', gradient: 'from-sky-400 to-blue-600' },
+  { name: 'forest', label: 'Forest', icon: '🌲', gradient: 'from-green-500 to-green-800' },
+  { name: 'tundra', label: 'Tundra', icon: '❄️', gradient: 'from-cyan-400 to-sky-700' },
+  { name: 'sunset', label: 'Sunset', icon: '🌅', gradient: 'from-orange-400 to-pink-600' },
+  { name: 'night', label: 'Night', icon: '🌙', gradient: 'from-indigo-500 to-purple-800' },
+  { name: 'snow', label: 'Snow', icon: '🌨️', gradient: 'from-blue-100 to-cyan-300' },
+  { name: 'autumn', label: 'Autumn', icon: '🍂', gradient: 'from-yellow-600 to-red-700' }
+];
+
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [theme, setTheme] = useState('park');
@@ -43,17 +54,6 @@ function App() {
     compactMode: false,
     autoTheme: false
   });
-
-  const themes = [
-    { name: 'park', label: 'Park', icon: '🌳', gradient: 'from-lime-400 to-emerald-600' },
-    { name: 'beach', label: 'Beach', icon: '🏖️', gradient: 'from-sky-400 to-blue-600' },
-    { name: 'forest', label: 'Forest', icon: '🌲', gradient: 'from-green-500 to-green-800' },
-    { name: 'tundra', label: 'Tundra', icon: '❄️', gradient: 'from-cyan-400 to-sky-700' },
-    { name: 'sunset', label: 'Sunset', icon: '🌅', gradient: 'from-orange-400 to-pink-600' },
-    { name: 'night', label: 'Night', icon: '🌙', gradient: 'from-indigo-500 to-purple-800' },
-    { name: 'snow', label: 'Snow', icon: '🌨️', gradient: 'from-blue-100 to-cyan-300' },
-    { name: 'autumn', label: 'Autumn', icon: '🍂', gradient: 'from-yellow-600 to-red-700' }
-  ];
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -116,30 +116,30 @@ function App() {
     }
   }, [settings]);
 
-  // Modal handlers
-  const handleJournalClick = () => {
+  // Modal handlers - Memoized to prevent CalendarCard re-renders
+  const handleJournalClick = useCallback(() => {
     setIsJournalOpen(true);
-  };
+  }, []);
 
-  const handleAiClick = () => {
+  const handleAiClick = useCallback(() => {
     setIsAiOpen(true);
-  };
+  }, []);
 
-  const handleFavoritesClick = () => {
+  const handleFavoritesClick = useCallback(() => {
     setIsFavoritesOpen(true);
-  };
+  }, []);
 
-  // Journal handlers
-  const handleSaveJournal = async (date, entry) => {
+  // Journal handlers - Memoized for stable props
+  const handleSaveJournal = useCallback(async (date, entry) => {
     const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     setJournalEntries(prev => ({
       ...prev,
       [dateKey]: entry
     }));
-  };
+  }, []);
 
-  // Favorites handlers
-  const handleAddFavorite = (imageUrl, imageType) => {
+  // Favorites handlers - Memoized for stable props
+  const handleAddFavorite = useCallback((imageUrl, imageType) => {
     const newFavorite = {
       id: Date.now().toString(),
       url: imageUrl,
@@ -147,20 +147,20 @@ function App() {
       savedAt: Date.now()
     };
     setFavorites(prev => [newFavorite, ...prev]);
-  };
+  }, []);
 
-  const handleRemoveFavorite = (id) => {
+  const handleRemoveFavorite = useCallback((id) => {
     setFavorites(prev => prev.filter(fav => fav.id !== id));
-  };
+  }, []);
 
-  const handleClearAllFavorites = () => {
+  const handleClearAllFavorites = useCallback(() => {
     setFavorites([]);
-  };
+  }, []);
 
-  // Settings handler
-  const handleSettingsChange = (newSettings) => {
+  // Settings handler - Memoized for stable props
+  const handleSettingsChange = useCallback((newSettings) => {
     setSettings(newSettings);
-  };
+  }, []);
 
   // Check if current image is favorited
   const isCurrentImageFavorited = currentImage && favorites.some(fav => fav.url === currentImage.url);

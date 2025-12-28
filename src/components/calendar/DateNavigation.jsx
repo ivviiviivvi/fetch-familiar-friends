@@ -1,6 +1,8 @@
+import { memo } from 'react';
 import PropTypes from 'prop-types';
 
-const DateNavigation = ({ currentDate, onDateChange }) => {
+// Memoized to prevent unnecessary re-renders when other app state changes
+const DateNavigation = memo(function DateNavigation({ currentDate, onDateChange }) {
   const goToPreviousDay = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() - 1);
@@ -71,7 +73,7 @@ const DateNavigation = ({ currentDate, onDateChange }) => {
       </button>
     </div>
   );
-};
+});
 
 DateNavigation.propTypes = {
   currentDate: PropTypes.instanceOf(Date).isRequired,
