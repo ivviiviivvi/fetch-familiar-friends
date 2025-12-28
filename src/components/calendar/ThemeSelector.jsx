@@ -1,6 +1,8 @@
+import { memo } from 'react';
 import PropTypes from 'prop-types';
 
-const ThemeSelector = ({ currentTheme, onThemeChange, themes }) => {
+// Memoized to prevent re-renders when parent state changes but theme props remain stable
+const ThemeSelector = memo(function ThemeSelector({ currentTheme, onThemeChange, themes }) {
   return (
     <div className="flex gap-2 justify-center mb-4" role="group" aria-label="Theme selector">
       {themes.map((theme) => (
@@ -22,7 +24,7 @@ const ThemeSelector = ({ currentTheme, onThemeChange, themes }) => {
       ))}
     </div>
   );
-};
+});
 
 ThemeSelector.propTypes = {
   currentTheme: PropTypes.string.isRequired,
