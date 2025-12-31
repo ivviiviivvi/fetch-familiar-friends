@@ -1,9 +1,6 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { formatDate } from '../../utils/socialData';
 
 function PetMemorial() {
-  const [showCreateTribute, setShowCreateTribute] = useState(false);
 
   // Mock memorial pets
   const memorials = [
@@ -66,7 +63,6 @@ function PetMemorial() {
           </p>
         </div>
         <button
-          onClick={() => setShowCreateTribute(true)}
           className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
         >
           + Create Tribute

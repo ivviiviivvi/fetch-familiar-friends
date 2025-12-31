@@ -1,9 +1,7 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
 import PropTypes from 'prop-types';
 
 function EnhancedMemorial({ pet, lifeData }) {
-  const [activeSection, setActiveSection] = useState('virtual');
 
   // Mock life data collected over pet's lifetime
   const petVirtualization = {
