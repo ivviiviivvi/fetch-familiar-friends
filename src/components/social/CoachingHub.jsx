@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
 
 function CoachingHub() {
-  const [selectedCoach, setSelectedCoach] = useState(null);
 
   // Featured monthly coaches
   const featuredCoaches = [

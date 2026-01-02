@@ -8,7 +8,6 @@ import NearbyPetParents from './NearbyPetParents';
 import CareInstructions from './CareInstructions';
 import ARCamera from './ARCamera';
 import VirtualPet from './VirtualPet';
-import PetMemorial from './PetMemorial';
 import EnhancedMemorial from './EnhancedMemorial';
 import CoachingHub from './CoachingHub';
 import VetTelemedicine from './VetTelemedicine';
