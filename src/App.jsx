@@ -4,12 +4,15 @@ import ThemeSelector from './components/calendar/ThemeSelector';
 import DateNavigation from './components/calendar/DateNavigation';
 import MonthCalendar from './components/calendar/MonthCalendar';
 import ErrorBoundary from './components/ErrorBoundary';
+import VisualLanding from './components/VisualLanding';
 import JournalModal from './components/modals/JournalModal';
 import AiModal from './components/modals/AiModal';
 import FavoritesModal from './components/modals/FavoritesModal';
 import StatisticsModal from './components/modals/StatisticsModal';
 import KeyboardShortcutsModal from './components/modals/KeyboardShortcutsModal';
 import SettingsModal from './components/modals/SettingsModal';
+import ASCIIVisualizer from './components/modals/ASCIIVisualizer';
+import SocialHub from './components/modals/SocialHub';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDarkMode } from './hooks/useDarkMode';
 
@@ -26,6 +29,9 @@ function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showMonthView, setShowMonthView] = useState(false);
+  const [isASCIIVisualizerOpen, setIsASCIIVisualizerOpen] = useState(false);
+  const [isSocialHubOpen, setIsSocialHubOpen] = useState(false);
+  const [showLanding, setShowLanding] = useState(false);
 
   // Data states
   const [favorites, setFavorites] = useState([]);
@@ -62,6 +68,7 @@ function App() {
       const savedJournalEntries = localStorage.getItem('dogtale-journal');
       const savedTheme = localStorage.getItem('dogtale-theme');
       const savedSettings = localStorage.getItem('dogtale-settings');
+      const hasSeenLanding = localStorage.getItem('dogtale-landing-seen');
 
       if (savedFavorites) {
         setFavorites(JSON.parse(savedFavorites));
@@ -74,6 +81,10 @@ function App() {
       }
       if (savedSettings) {
         setSettings(JSON.parse(savedSettings));
+      }
+      // Show landing if user hasn't seen it before
+      if (!hasSeenLanding) {
+        setShowLanding(true);
       }
     } catch (error) {
       console.error('Error loading data from localStorage:', error);
@@ -162,6 +173,12 @@ function App() {
     setSettings(newSettings);
   };
 
+  // Landing handler
+  const handleLandingComplete = () => {
+    setShowLanding(false);
+    localStorage.setItem('dogtale-landing-seen', 'true');
+  };
+
   // Check if current image is favorited
   const isCurrentImageFavorited = currentImage && favorites.some(fav => fav.url === currentImage.url);
 
@@ -196,7 +213,17 @@ function App() {
   };
 
   // Keyboard shortcuts (only active when no modal is open)
-  const anyModalOpen = isJournalOpen || isAiOpen || isFavoritesOpen || isStatsOpen || isShortcutsOpen || isSettingsOpen;
+  const modalStates = [
+    isJournalOpen,
+    isAiOpen,
+    isFavoritesOpen,
+    isStatsOpen,
+    isShortcutsOpen,
+    isSettingsOpen,
+    isASCIIVisualizerOpen,
+    isSocialHubOpen
+  ];
+  const anyModalOpen = modalStates.some(state => state);
 
   useNavigationShortcuts({
     onPrevious: handlePreviousDay,
@@ -246,6 +273,22 @@ function App() {
                 title={isDarkMode ? 'Light mode (D)' : 'Dark mode (D)'}
               >
                 <span className="text-xl">{isDarkMode ? '☀️' : '🌙'}</span>
+              </button>
+              <button
+                onClick={() => setIsSocialHubOpen(true)}
+                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Social Hub"
+                title="Social Hub"
+              >
+                <span className="text-xl">👥</span>
+              </button>
+              <button
+                onClick={() => setIsASCIIVisualizerOpen(true)}
+                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="ASCII Guide"
+                title="ASCII Guide"
+              >
+                <span className="text-xl">ℹ️</span>
               </button>
               <button
                 onClick={() => setShowMonthView(!showMonthView)}
@@ -368,6 +411,19 @@ function App() {
         settings={settings}
         onSettingsChange={handleSettingsChange}
       />
+
+      <ASCIIVisualizer
+        isOpen={isASCIIVisualizerOpen}
+        onClose={() => setIsASCIIVisualizerOpen(false)}
+      />
+
+      <SocialHub
+        isOpen={isSocialHubOpen}
+        onClose={() => setIsSocialHubOpen(false)}
+      />
+
+      {/* Landing screen - shows once on first visit */}
+      {showLanding && <VisualLanding onComplete={handleLandingComplete} />}
     </ErrorBoundary>
   );
 }
