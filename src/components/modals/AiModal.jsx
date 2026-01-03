@@ -178,11 +178,12 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
           ))}
 
           {isTyping && (
-            <div className="flex justify-start">
+            <div className="flex justify-start" role="status" aria-live="polite">
               <div className="bg-gray-100 p-3 rounded-lg">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🤖</span>
-                  <div className="flex gap-1">
+                  <span className="sr-only">AI is typing...</span>
+                  <div className="flex gap-1" aria-hidden="true">
                     <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
                     <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                     <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
