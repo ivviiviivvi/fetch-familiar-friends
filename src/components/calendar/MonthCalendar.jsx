@@ -70,19 +70,44 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
     return days;
   }, [viewDate]);
 
+  // Performance optimization: Create Sets for O(1) lookups
+  const favoriteDates = useMemo(() => {
+    const dates = new Set();
+    favorites.forEach(fav => {
+      dates.add(new Date(fav.savedAt).toDateString());
+    });
+    return dates;
+  }, [favorites]);
+
+  const journalDates = useMemo(() => {
+    const dates = new Set();
+    Object.entries(journalEntries).forEach(([key, value]) => {
+      // Handle both key formats: 'Fri May 15 2023' (toDateString) and '2023-05-15' (YYYY-MM-DD)
+      // Check if value is valid string
+      if (typeof value === 'string' && value.trim().length > 0) {
+        // If the key looks like YYYY-MM-DD, convert it to toDateString for consistency with rendering loop
+        if (key.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          // Parse YYYY-MM-DD correctly - treating as local date components to avoid timezone shifts
+          const [y, m, d] = key.split('-').map(Number);
+          const date = new Date(y, m - 1, d);
+          dates.add(date.toDateString());
+        } else {
+          // Assume it's already toDateString format (legacy or different source)
+          dates.add(key);
+        }
+      }
+    });
+    return dates;
+  }, [journalEntries]);
+
   // Check if a date has journal entry
   const hasJournalEntry = (date) => {
-    const dateKey = date.toDateString();
-    return journalEntries[dateKey] && journalEntries[dateKey].trim().length > 0;
+    return journalDates.has(date.toDateString());
   };
 
   // Check if a date has favorites
   const hasFavorite = (date) => {
-    const dateStr = date.toDateString();
-    return favorites.some(fav => {
-      const favDate = new Date(fav.savedAt).toDateString();
-      return favDate === dateStr;
-    });
+    return favoriteDates.has(date.toDateString());
   };
 
   // Check if date is today
@@ -270,5 +295,8 @@ MonthCalendar.defaultProps = {
   favorites: [],
   onDateSelect: null
 };
+
+// Display name for memoized component
+MonthCalendar.displayName = 'MonthCalendar';
 
 export default MonthCalendar;
