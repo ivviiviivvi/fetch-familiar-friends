@@ -297,4 +297,11 @@ describe('isFamilyFriendly', () => {
     expect(isFamilyFriendly('This is SHIT')).toBe(false);
     expect(isFamilyFriendly('What the HELL')).toBe(false);
   });
+
+  it('should avoid false positives', () => {
+    expect(isFamilyFriendly('Hello there')).toBe(true); // contains "hell"
+    expect(isFamilyFriendly('Class assignment')).toBe(true); // contains "ass"
+    expect(isFamilyFriendly('Scunthorpe')).toBe(true); // Classic Scunthorpe problem
+    expect(isFamilyFriendly('push it')).toBe(true); // contains "shit"
+  });
 });
