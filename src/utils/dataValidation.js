@@ -438,6 +438,7 @@ export function sanitizeInput(input) {
  */
 export function isFamilyFriendly(content) {
   // Basic profanity list (extend as needed)
+  // Using word boundaries will prevent false positives (e.g., "shell" containing "hell")
   const profanity = [
     'damn', 'hell', 'crap', 'ass', 'shit', 'fuck', 'bitch'
     // Add more as needed, but keep it reasonable
@@ -446,7 +447,10 @@ export function isFamilyFriendly(content) {
   const lowerContent = content.toLowerCase();
 
   for (const word of profanity) {
-    if (lowerContent.includes(word)) {
+    // Check for word boundaries using regex
+    // \b matches a word boundary (start/end of string or non-word character)
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    if (regex.test(lowerContent)) {
       return false;
     }
   }
