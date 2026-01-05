@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 // Static data defined outside component to avoid recreation
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) => {
+const MonthCalendar = memo(function MonthCalendar({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) {
   const [viewDate, setViewDate] = useState(new Date(currentDate));
 
   // Get calendar data for the month
@@ -70,25 +70,42 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
     return days;
   }, [viewDate]);
 
+  // Memoize favorites lookup set to avoid O(N*M) check in render loop
+  const favoriteDates = useMemo(() => {
+    const dates = new Set();
+    favorites.forEach(fav => {
+      if (fav.savedAt) {
+        dates.add(new Date(fav.savedAt).toDateString());
+      }
+    });
+    return dates;
+  }, [favorites]);
+
+  // Memoize journal keys to avoid object lookup overhead if needed (though mostly for consistency)
+  // and to support efficient checking without repeated string allocs if we pre-processed
+  // But here mainly optimizing favorites as it was O(N)
+
+  // Memoize today's date to avoid creating new Date() 42 times
+  const todayDate = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []); // Update only on mount (or could depend on a timer if app stays open for days)
+
   // Check if a date has journal entry
   const hasJournalEntry = (date) => {
     const dateKey = date.toDateString();
     return journalEntries[dateKey] && journalEntries[dateKey].trim().length > 0;
   };
 
-  // Check if a date has favorites
+  // Check if a date has favorites - O(1) lookup
   const hasFavorite = (date) => {
-    const dateStr = date.toDateString();
-    return favorites.some(fav => {
-      const favDate = new Date(fav.savedAt).toDateString();
-      return favDate === dateStr;
-    });
+    return favoriteDates.has(date.toDateString());
   };
 
   // Check if date is today
   const isToday = (date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+    return date.toDateString() === todayDate.toDateString();
   };
 
   // Check if date is selected
@@ -98,9 +115,7 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
 
   // Check if date is in the future
   const isFuture = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date > today;
+    return date > todayDate;
   };
 
   const handlePrevMonth = () => {
