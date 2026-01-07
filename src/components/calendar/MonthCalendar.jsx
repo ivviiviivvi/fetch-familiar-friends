@@ -8,6 +8,20 @@ const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) => {
   const [viewDate, setViewDate] = useState(new Date(currentDate));
 
+  // Optimize favorites lookup: Convert array to Set of date strings
+  // This reduces lookup complexity from O(Days * Favorites) to O(1)
+  const favoriteDatesSet = useMemo(() => {
+    const set = new Set();
+    if (favorites && favorites.length > 0) {
+      favorites.forEach(fav => {
+        if (fav.savedAt) {
+          set.add(new Date(fav.savedAt).toDateString());
+        }
+      });
+    }
+    return set;
+  }, [favorites]);
+
   // Get calendar data for the month
   const calendarData = useMemo(() => {
     const year = viewDate.getFullYear();
@@ -70,25 +84,24 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
     return days;
   }, [viewDate]);
 
+  // Calculate today's date once per render for consistent comparisons
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+
   // Check if a date has journal entry
   const hasJournalEntry = (date) => {
     const dateKey = date.toDateString();
     return journalEntries[dateKey] && journalEntries[dateKey].trim().length > 0;
   };
 
-  // Check if a date has favorites
+  // Check if a date has favorites - O(1) lookup
   const hasFavorite = (date) => {
-    const dateStr = date.toDateString();
-    return favorites.some(fav => {
-      const favDate = new Date(fav.savedAt).toDateString();
-      return favDate === dateStr;
-    });
+    return favoriteDatesSet.has(date.toDateString());
   };
 
   // Check if date is today
   const isToday = (date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+    return date.toDateString() === todayDate.toDateString();
   };
 
   // Check if date is selected
@@ -98,9 +111,7 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
 
   // Check if date is in the future
   const isFuture = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date > today;
+    return date > todayDate;
   };
 
   const handlePrevMonth = () => {
