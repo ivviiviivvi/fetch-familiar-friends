@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './Modal';
 import { getBreedSpecificResponse } from '../../utils/breedKnowledge';
+import { isFamilyFriendly } from '../../utils/dataValidation';
 
 const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   // Initial welcome message mentions breed if available
@@ -19,6 +20,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [error, setError] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -29,13 +31,13 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const generateAiResponse = (userMessage) => {
     const lowerMessage = userMessage.toLowerCase();
@@ -99,11 +101,19 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   const handleSend = async () => {
     if (!inputMessage.trim() || inputMessage.length > 500) return;
 
+    // Validate content for family-friendly language
+    if (!isFamilyFriendly(inputMessage)) {
+      setError('Please keep the conversation family-friendly.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
     const userMessage = {
       role: 'user',
       content: inputMessage.slice(0, 500) // Ensure max length
     };
 
+    setError('');
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
@@ -214,7 +224,9 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
         )}
 
         {/* Input Area */}
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
+          {error && <p className="text-red-500 text-sm px-1">{error}</p>}
+          <div className="flex gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -245,6 +257,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
+          </div>
         </div>
 
         {/* Disclaimer */}
