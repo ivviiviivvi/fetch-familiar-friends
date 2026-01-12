@@ -3,9 +3,17 @@ import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 
 // Static data defined outside component to avoid recreation
-const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEK_DAYS = [
+  { short: 'Sun', long: 'Sunday' },
+  { short: 'Mon', long: 'Monday' },
+  { short: 'Tue', long: 'Tuesday' },
+  { short: 'Wed', long: 'Wednesday' },
+  { short: 'Thu', long: 'Thursday' },
+  { short: 'Fri', long: 'Friday' },
+  { short: 'Sat', long: 'Saturday' }
+];
 
-const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) => {
+const MonthCalendar = memo(function MonthCalendar({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) {
   const [viewDate, setViewDate] = useState(new Date(currentDate));
 
   // Get calendar data for the month
@@ -166,13 +174,15 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
       </div>
 
       {/* Week day headers */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="grid grid-cols-7 gap-2 mb-2" role="row">
         {WEEK_DAYS.map((day) => (
           <div
-            key={day}
+            key={day.short}
             className="text-center text-sm font-semibold text-gray-600 dark:text-gray-400 py-2"
+            role="columnheader"
+            aria-label={day.long}
           >
-            {day}
+            {day.short}
           </div>
         ))}
       </div>
