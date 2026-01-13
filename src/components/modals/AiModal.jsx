@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './Modal';
 import { getBreedSpecificResponse } from '../../utils/breedKnowledge';
+import { sanitizeInput, isFamilyFriendly } from '../../utils/dataValidation';
 
 const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   // Initial welcome message mentions breed if available
@@ -20,6 +21,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [inputError, setInputError] = useState(''); // New state for input errors
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -29,13 +31,13 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const generateAiResponse = (userMessage) => {
     const lowerMessage = userMessage.toLowerCase();
@@ -97,11 +99,28 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   };
 
   const handleSend = async () => {
-    if (!inputMessage.trim() || inputMessage.length > 500) return;
+    // Clear previous errors
+    setInputError('');
+
+    if (!inputMessage.trim()) return;
+
+    // Check for profanity first
+    if (!isFamilyFriendly(inputMessage)) {
+      setInputError('Please keep the conversation family-friendly. 🐾');
+      return;
+    }
+
+    if (inputMessage.length > 500) {
+      setInputError('Message is too long. Please shorten it to 500 characters.');
+      return;
+    }
+
+    // Sanitize input
+    const sanitizedInput = sanitizeInput(inputMessage.slice(0, 500));
 
     const userMessage = {
       role: 'user',
-      content: inputMessage.slice(0, 500) // Ensure max length
+      content: sanitizedInput
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -112,7 +131,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
     setTimeout(() => {
       const aiResponse = {
         role: 'assistant',
-        content: generateAiResponse(inputMessage)
+        content: generateAiResponse(sanitizedInput)
       };
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
@@ -134,6 +153,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
           content: 'Chat cleared! How can I help you today?'
         }
       ]);
+      setInputError('');
     }
   };
 
@@ -147,6 +167,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   const handleSuggestionClick = (question) => {
     setInputMessage(question);
     inputRef.current?.focus();
+    setInputError(''); // Clear error on suggestion click
   };
 
   return (
@@ -195,8 +216,15 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Error Message */}
+        {inputError && (
+          <div className="mb-2 px-2 text-red-500 text-sm font-medium animate-pulse">
+            {inputError}
+          </div>
+        )}
+
         {/* Suggested Questions */}
-        {messages.length <= 1 && (
+        {messages.length <= 1 && !inputError && (
           <div className="mb-4">
             <p className="text-xs text-gray-500 mb-2">Suggested questions:</p>
             <div className="flex flex-wrap gap-2">
@@ -219,13 +247,19 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
             ref={inputRef}
             type="text"
             value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
+            onChange={(e) => {
+              setInputMessage(e.target.value);
+              if (inputError) setInputError(''); // Clear error on type
+            }}
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything about dogs..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+              inputError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+            }`}
             disabled={isTyping}
             maxLength={500}
             aria-label="Message input"
+            aria-invalid={!!inputError}
           />
           <button
             onClick={handleSend}
