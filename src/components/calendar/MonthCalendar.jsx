@@ -1,11 +1,29 @@
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
 
 // Static data defined outside component to avoid recreation
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) => {
+// Helper functions defined outside component to avoid dependency issues
+const isToday = (date) => {
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+};
+
+const isFuture = (date) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date > today;
+};
+
+// Check if a date has journal entry
+const checkJournalEntry = (date, journalEntries) => {
+  const dateKey = date.toDateString();
+  return journalEntries[dateKey] && journalEntries[dateKey].trim().length > 0;
+};
+
+const MonthCalendar = memo(function MonthCalendar({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) {
   const [viewDate, setViewDate] = useState(new Date(currentDate));
 
   // Get calendar data for the month
@@ -70,25 +88,21 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
     return days;
   }, [viewDate]);
 
-  // Check if a date has journal entry
-  const hasJournalEntry = (date) => {
-    const dateKey = date.toDateString();
-    return journalEntries[dateKey] && journalEntries[dateKey].trim().length > 0;
-  };
-
-  // Check if a date has favorites
-  const hasFavorite = (date) => {
-    const dateStr = date.toDateString();
-    return favorites.some(fav => {
-      const favDate = new Date(fav.savedAt).toDateString();
-      return favDate === dateStr;
+  // Optimize favorites lookup: O(N*M) -> O(1) inside loop
+  const favoriteDates = useMemo(() => {
+    const dates = new Set();
+    favorites.forEach(fav => {
+      if (fav.savedAt) {
+        // Use toDateString for consistent date matching
+        dates.add(new Date(fav.savedAt).toDateString());
+      }
     });
-  };
+    return dates;
+  }, [favorites]);
 
-  // Check if date is today
-  const isToday = (date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+  // Check if a date has favorites (optimized)
+  const hasFavorite = (date) => {
+    return favoriteDates.has(date.toDateString());
   };
 
   // Check if date is selected
@@ -96,34 +110,31 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
     return date.toDateString() === currentDate.toDateString();
   };
 
-  // Check if date is in the future
-  const isFuture = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date > today;
-  };
+  const handlePrevMonth = useCallback(() => {
+    setViewDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(newDate.getMonth() - 1);
+      return newDate;
+    });
+  }, []);
 
-  const handlePrevMonth = () => {
-    const newDate = new Date(viewDate);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setViewDate(newDate);
-  };
+  const handleNextMonth = useCallback(() => {
+    setViewDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(newDate.getMonth() + 1);
+      return newDate;
+    });
+  }, []);
 
-  const handleNextMonth = () => {
-    const newDate = new Date(viewDate);
-    newDate.setMonth(newDate.getMonth() + 1);
-    setViewDate(newDate);
-  };
-
-  const handleToday = () => {
+  const handleToday = useCallback(() => {
     setViewDate(new Date());
-  };
+  }, []);
 
-  const handleDateClick = (date) => {
+  const handleDateClick = useCallback((date) => {
     if (!isFuture(date) && onDateSelect) {
       onDateSelect(date);
     }
-  };
+  }, [onDateSelect]);
 
   const formatMonthYear = () => {
     return viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -180,7 +191,7 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
       {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-2">
         {calendarData.map((dayData, index) => {
-          const hasJournal = hasJournalEntry(dayData.date);
+          const hasJournal = checkJournalEntry(dayData.date, journalEntries);
           const hasFav = hasFavorite(dayData.date);
           const isCurrentDay = isToday(dayData.date);
           const isSelectedDay = isSelected(dayData.date);
