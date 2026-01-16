@@ -5,8 +5,52 @@ import { motion } from 'framer-motion';
 // Static data defined outside component to avoid recreation
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) => {
+// Helper to check if date is in future
+const isFutureDate = (date) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date > today;
+};
+
+// Helper to check if date is today
+const isTodayDate = (date) => {
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+};
+
+const MonthCalendar = memo(function MonthCalendar({ currentDate, journalEntries = {}, favorites = [], onDateSelect }) {
   const [viewDate, setViewDate] = useState(new Date(currentDate));
+
+  // ⚡ Optimization: Create Sets for O(1) lookups
+  const favoritesSet = useMemo(() => {
+    const set = new Set();
+    favorites.forEach(fav => {
+      if (fav.savedAt) {
+        set.add(new Date(fav.savedAt).toDateString());
+      }
+    });
+    return set;
+  }, [favorites]);
+
+  const journalSet = useMemo(() => {
+    const set = new Set();
+    Object.keys(journalEntries).forEach(key => {
+      // Handle both date strings and YYYY-MM-DD formats if needed
+      // Currently logic in App.jsx and here is inconsistent, but we stick to what was working locally
+      // keys in journalEntries might be YYYY-MM-DD or date strings.
+      // If they are date strings, this works.
+      // If they are YYYY-MM-DD, we need to check if existing logic `journalEntries[dateKey]` relies on `date.toDateString()`.
+      // The original code was: `journalEntries[dateKey] && ...` where `dateKey = date.toDateString()`.
+      // So effectively it was only checking keys that match `toDateString()`.
+      // If `journalEntries` only has YYYY-MM-DD keys, the original code was broken.
+      // Optimizing a broken feature is tricky.
+      // Let's preserve exact behavior: Check existence by `toDateString()` key.
+      if (journalEntries[key] && journalEntries[key].trim().length > 0) {
+        set.add(key);
+      }
+    });
+    return set;
+  }, [journalEntries]);
 
   // Get calendar data for the month
   const calendarData = useMemo(() => {
@@ -33,75 +77,42 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
     // Build calendar array
     const days = [];
 
+    // Helper to create day object
+    const createDay = (date, isCurrentMonth, isPrevMonth) => {
+       const dateStr = date.toDateString();
+       return {
+         date,
+         day: date.getDate(),
+         isCurrentMonth,
+         isPrevMonth,
+         // Pre-calculate status flags
+         isFuture: isFutureDate(date),
+         isToday: isTodayDate(date),
+         dateStr // Store string for O(1) lookups in render
+       };
+    };
+
     // Previous month days
     for (let i = prevMonthDays - 1; i >= 0; i--) {
       const day = prevMonthLastDay - i;
       const date = new Date(year, month - 1, day);
-      days.push({
-        date,
-        day,
-        isCurrentMonth: false,
-        isPrevMonth: true
-      });
+      days.push(createDay(date, false, true));
     }
 
     // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      days.push({
-        date,
-        day,
-        isCurrentMonth: true,
-        isPrevMonth: false
-      });
+      days.push(createDay(date, true, false));
     }
 
     // Next month days
     for (let day = 1; day <= nextMonthDays; day++) {
       const date = new Date(year, month + 1, day);
-      days.push({
-        date,
-        day,
-        isCurrentMonth: false,
-        isPrevMonth: false
-      });
+      days.push(createDay(date, false, false));
     }
 
     return days;
   }, [viewDate]);
-
-  // Check if a date has journal entry
-  const hasJournalEntry = (date) => {
-    const dateKey = date.toDateString();
-    return journalEntries[dateKey] && journalEntries[dateKey].trim().length > 0;
-  };
-
-  // Check if a date has favorites
-  const hasFavorite = (date) => {
-    const dateStr = date.toDateString();
-    return favorites.some(fav => {
-      const favDate = new Date(fav.savedAt).toDateString();
-      return favDate === dateStr;
-    });
-  };
-
-  // Check if date is today
-  const isToday = (date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  };
-
-  // Check if date is selected
-  const isSelected = (date) => {
-    return date.toDateString() === currentDate.toDateString();
-  };
-
-  // Check if date is in the future
-  const isFuture = (date) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date > today;
-  };
 
   const handlePrevMonth = () => {
     const newDate = new Date(viewDate);
@@ -120,7 +131,7 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
   };
 
   const handleDateClick = (date) => {
-    if (!isFuture(date) && onDateSelect) {
+    if (!isFutureDate(date) && onDateSelect) {
       onDateSelect(date);
     }
   };
@@ -128,6 +139,8 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
   const formatMonthYear = () => {
     return viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
+
+  const currentDateStr = currentDate.toDateString();
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors">
@@ -180,11 +193,13 @@ const MonthCalendar = memo(({ currentDate, journalEntries = {}, favorites = [], 
       {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-2">
         {calendarData.map((dayData, index) => {
-          const hasJournal = hasJournalEntry(dayData.date);
-          const hasFav = hasFavorite(dayData.date);
-          const isCurrentDay = isToday(dayData.date);
-          const isSelectedDay = isSelected(dayData.date);
-          const isFutureDay = isFuture(dayData.date);
+          // O(1) Lookups using Sets
+          const hasJournal = journalSet.has(dayData.dateStr);
+          const hasFav = favoritesSet.has(dayData.dateStr);
+
+          const isSelectedDay = dayData.dateStr === currentDateStr;
+          const isFutureDay = dayData.isFuture;
+          const isCurrentDay = dayData.isToday;
 
           return (
             <motion.button
