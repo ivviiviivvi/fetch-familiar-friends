@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Modal from './Modal';
 import { getBreedSpecificResponse } from '../../utils/breedKnowledge';
+import { isFamilyFriendly, sanitizeInput } from '../../utils/dataValidation';
 
 const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   // Initial welcome message mentions breed if available
@@ -19,9 +20,14 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [error, setError] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -32,10 +38,6 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const generateAiResponse = (userMessage) => {
     const lowerMessage = userMessage.toLowerCase();
@@ -97,11 +99,19 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
   };
 
   const handleSend = async () => {
+    setError('');
     if (!inputMessage.trim() || inputMessage.length > 500) return;
+
+    if (!isFamilyFriendly(inputMessage)) {
+      setError('Please use family-friendly language.');
+      return;
+    }
+
+    const sanitizedMessage = sanitizeInput(inputMessage.slice(0, 500));
 
     const userMessage = {
       role: 'user',
-      content: inputMessage.slice(0, 500) // Ensure max length
+      content: sanitizedMessage
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -112,7 +122,7 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
     setTimeout(() => {
       const aiResponse = {
         role: 'assistant',
-        content: generateAiResponse(inputMessage)
+        content: generateAiResponse(sanitizedMessage)
       };
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
@@ -196,7 +206,13 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
         </div>
 
         {/* Suggested Questions */}
-        {messages.length <= 1 && (
+        {error && (
+          <div className="mb-2 p-2 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        {messages.length <= 1 && !error && (
           <div className="mb-4">
             <p className="text-xs text-gray-500 mb-2">Suggested questions:</p>
             <div className="flex flex-wrap gap-2">
@@ -219,10 +235,13 @@ const AiModal = ({ isOpen, onClose, currentBreed = null }) => {
             ref={inputRef}
             type="text"
             value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
+            onChange={(e) => {
+              setInputMessage(e.target.value);
+              if (error) setError('');
+            }}
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything about dogs..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
             disabled={isTyping}
             maxLength={500}
             aria-label="Message input"
