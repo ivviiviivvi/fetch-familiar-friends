@@ -128,17 +128,17 @@ function App() {
   }, [settings]);
 
   // Modal handlers
-  const handleJournalClick = () => {
+  const handleJournalClick = useCallback(() => {
     setIsJournalOpen(true);
-  };
+  }, []);
 
-  const handleAiClick = () => {
+  const handleAiClick = useCallback(() => {
     setIsAiOpen(true);
-  };
+  }, []);
 
-  const handleFavoritesClick = () => {
+  const handleFavoritesClick = useCallback(() => {
     setIsFavoritesOpen(true);
-  };
+  }, []);
 
   // Journal handlers
   const handleSaveJournal = async (date, entry) => {
@@ -150,7 +150,7 @@ function App() {
   };
 
   // Favorites handlers
-  const handleAddFavorite = (imageUrl, imageType) => {
+  const handleAddFavorite = useCallback((imageUrl, imageType) => {
     const newFavorite = {
       id: Date.now().toString(),
       url: imageUrl,
@@ -158,7 +158,7 @@ function App() {
       savedAt: Date.now()
     };
     setFavorites(prev => [newFavorite, ...prev]);
-  };
+  }, []);
 
   const handleRemoveFavorite = (id) => {
     setFavorites(prev => prev.filter(fav => fav.id !== id));

@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import PropTypes from 'prop-types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAllDailyContent } from '../../utils/dailyContent';
 import { getCachedImage, cacheImage, preloadNearbyDates } from '../../utils/imageCache';
 
-const CalendarCard = ({
+const CalendarCard = memo(function CalendarCard({
   date,
   theme = 'park',
   onJournalClick,
@@ -16,7 +16,7 @@ const CalendarCard = ({
   journalEntry = null,
   favoriteCount = 0,
   settings = null
-}) => {
+}) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [todayImage, setTodayImage] = useState(null);
   const [breedInfo, setBreedInfo] = useState(null);
@@ -438,7 +438,7 @@ const CalendarCard = ({
       </div>
     </motion.div>
   );
-};
+});
 
 CalendarCard.propTypes = {
   date: PropTypes.instanceOf(Date).isRequired,
