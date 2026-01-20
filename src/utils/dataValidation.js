@@ -436,20 +436,21 @@ export function sanitizeInput(input) {
  * @param {string} content - Content to check
  * @returns {boolean} - True if family-friendly
  */
+// Pre-compile regex for better performance
+// Escape special regex characters and join with |
+const PROFANITY_LIST = [
+  'damn', 'hell', 'crap', 'ass', 'shit', 'fuck', 'bitch'
+];
+const PROFANITY_REGEX = new RegExp(
+  `\\b(${PROFANITY_LIST.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
+  'i'
+);
+
+/**
+ * Check if content is family-friendly (basic profanity filter)
+ * @param {string} content - Content to check
+ * @returns {boolean} - True if family-friendly
+ */
 export function isFamilyFriendly(content) {
-  // Basic profanity list (extend as needed)
-  const profanity = [
-    'damn', 'hell', 'crap', 'ass', 'shit', 'fuck', 'bitch'
-    // Add more as needed, but keep it reasonable
-  ];
-
-  const lowerContent = content.toLowerCase();
-
-  for (const word of profanity) {
-    if (lowerContent.includes(word)) {
-      return false;
-    }
-  }
-
-  return true;
+  return !PROFANITY_REGEX.test(content);
 }

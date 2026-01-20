@@ -297,4 +297,13 @@ describe('isFamilyFriendly', () => {
     expect(isFamilyFriendly('This is SHIT')).toBe(false);
     expect(isFamilyFriendly('What the HELL')).toBe(false);
   });
+
+  it('should not flag safe words containing parts of profanity', () => {
+    // "class" contains "ass"
+    expect(isFamilyFriendly('I have a class today')).toBe(true);
+    // "shell" contains "hell"
+    expect(isFamilyFriendly('Look at that shell')).toBe(true);
+    // "scrape" contains "crap"
+    expect(isFamilyFriendly('I have a scrape on my knee')).toBe(true);
+  });
 });
