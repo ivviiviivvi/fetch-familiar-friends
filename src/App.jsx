@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import CalendarCard from './components/calendar/CalendarCard';
 import ThemeSelector from './components/calendar/ThemeSelector';
 import DateNavigation from './components/calendar/DateNavigation';
 import MonthCalendar from './components/calendar/MonthCalendar';
 import ErrorBoundary from './components/ErrorBoundary';
+import VisualLanding from './components/VisualLanding';
 import JournalModal from './components/modals/JournalModal';
 import AiModal from './components/modals/AiModal';
 import FavoritesModal from './components/modals/FavoritesModal';
@@ -11,7 +12,6 @@ import StatisticsModal from './components/modals/StatisticsModal';
 import KeyboardShortcutsModal from './components/modals/KeyboardShortcutsModal';
 import SettingsModal from './components/modals/SettingsModal';
 import SocialHub from './components/social/SocialHub';
-import VisualLanding from './components/VisualLanding';
 import ASCIIVisualizer from './components/ASCIIVisualizer';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -47,7 +47,7 @@ function App() {
     preloadImages: true,
     preloadDays: 3,
     defaultView: 'day',
-    animationsEnabled: true,
+    animationsEnabled: typeof window !== 'undefined' && window.matchMedia ? !window.matchMedia('(prefers-reduced-motion: reduce)').matches : true,
     compactMode: false,
     autoTheme: false
   });
@@ -217,7 +217,17 @@ function App() {
   };
 
   // Keyboard shortcuts (only active when no modal is open)
-  const anyModalOpen = isJournalOpen || isAiOpen || isFavoritesOpen || isStatsOpen || isShortcutsOpen || isSettingsOpen || isSocialHubOpen;
+  const modalStates = [
+    isJournalOpen,
+    isAiOpen,
+    isFavoritesOpen,
+    isStatsOpen,
+    isShortcutsOpen,
+    isSettingsOpen,
+    isSocialHubOpen,
+    showASCIIVisualizer
+  ];
+  const anyModalOpen = modalStates.some(state => state);
 
   useNavigationShortcuts({
     onPrevious: handlePreviousDay,
@@ -244,6 +254,12 @@ function App() {
     'd': toggleDarkMode,
     ',': () => setIsSettingsOpen(true),
   }, !anyModalOpen);
+
+  // Stable handler for date selection to prevent MonthCalendar re-renders
+  const handleDateSelect = useCallback((date) => {
+    setCurrentDate(date);
+    setShowMonthView(false);
+  }, []);
 
   return (
     <ErrorBoundary>
@@ -345,10 +361,7 @@ function App() {
               currentDate={currentDate}
               journalEntries={journalEntries}
               favorites={favorites}
-              onDateSelect={(date) => {
-                setCurrentDate(date);
-                setShowMonthView(false);
-              }}
+              onDateSelect={handleDateSelect}
             />
           ) : (
             <CalendarCard

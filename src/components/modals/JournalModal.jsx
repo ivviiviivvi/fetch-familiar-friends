@@ -241,10 +241,11 @@ const JournalModal = ({ isOpen, onClose, date, initialEntry = '', onSave, allEnt
             {/* Search and Filters */}
             <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="journal-search" className="block text-sm font-medium text-gray-700 mb-1">
                   🔍 Search
                 </label>
                 <input
+                  id="journal-search"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -255,10 +256,11 @@ const JournalModal = ({ isOpen, onClose, date, initialEntry = '', onSave, allEnt
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="date-start" className="block text-sm font-medium text-gray-700 mb-1">
                     From Date
                   </label>
                   <input
+                    id="date-start"
                     type="date"
                     value={dateFilter.start}
                     onChange={(e) => setDateFilter({ ...dateFilter, start: e.target.value })}
@@ -266,10 +268,11 @@ const JournalModal = ({ isOpen, onClose, date, initialEntry = '', onSave, allEnt
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="date-end" className="block text-sm font-medium text-gray-700 mb-1">
                     To Date
                   </label>
                   <input
+                    id="date-end"
                     type="date"
                     value={dateFilter.end}
                     onChange={(e) => setDateFilter({ ...dateFilter, end: e.target.value })}
@@ -284,7 +287,7 @@ const JournalModal = ({ isOpen, onClose, date, initialEntry = '', onSave, allEnt
                     setSearchQuery('');
                     setDateFilter({ start: '', end: '' });
                   }}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
                 >
                   Clear Filters
                 </button>
