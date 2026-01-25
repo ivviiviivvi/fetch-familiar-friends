@@ -11,8 +11,8 @@ import FavoritesModal from './components/modals/FavoritesModal';
 import StatisticsModal from './components/modals/StatisticsModal';
 import KeyboardShortcutsModal from './components/modals/KeyboardShortcutsModal';
 import SettingsModal from './components/modals/SettingsModal';
-import ASCIIVisualizer from './components/modals/ASCIIVisualizer';
-import SocialHub from './components/modals/SocialHub';
+import SocialHub from './components/social/SocialHub';
+import ASCIIVisualizer from './components/ASCIIVisualizer';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDarkMode } from './hooks/useDarkMode';
 
@@ -21,6 +21,10 @@ function App() {
   const [theme, setTheme] = useState('park');
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
+  // Visual intro states
+  const [showVisualLanding, setShowVisualLanding] = useState(false);
+  const [showASCIIVisualizer, setShowASCIIVisualizer] = useState(false);
+
   // Modal states
   const [isJournalOpen, setIsJournalOpen] = useState(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
@@ -28,10 +32,8 @@ function App() {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showMonthView, setShowMonthView] = useState(false);
-  const [isASCIIVisualizerOpen, setIsASCIIVisualizerOpen] = useState(false);
   const [isSocialHubOpen, setIsSocialHubOpen] = useState(false);
-  const [showLanding, setShowLanding] = useState(false);
+  const [showMonthView, setShowMonthView] = useState(false);
 
   // Data states
   const [favorites, setFavorites] = useState([]);
@@ -61,6 +63,19 @@ function App() {
     { name: 'autumn', label: 'Autumn', icon: '🍂', gradient: 'from-yellow-600 to-red-700' }
   ];
 
+  // Check if first visit and show visual landing
+  useEffect(() => {
+    const hasSeenLanding = localStorage.getItem('dogtale-seen-landing');
+    if (!hasSeenLanding) {
+      setShowVisualLanding(true);
+    }
+  }, []);
+
+  const handleEnterApp = () => {
+    setShowVisualLanding(false);
+    localStorage.setItem('dogtale-seen-landing', 'true');
+  };
+
   // Load data from localStorage on mount
   useEffect(() => {
     try {
@@ -68,7 +83,6 @@ function App() {
       const savedJournalEntries = localStorage.getItem('dogtale-journal');
       const savedTheme = localStorage.getItem('dogtale-theme');
       const savedSettings = localStorage.getItem('dogtale-settings');
-      const hasSeenLanding = localStorage.getItem('dogtale-landing-seen');
 
       if (savedFavorites) {
         setFavorites(JSON.parse(savedFavorites));
@@ -81,10 +95,6 @@ function App() {
       }
       if (savedSettings) {
         setSettings(JSON.parse(savedSettings));
-      }
-      // Show landing if user hasn't seen it before
-      if (!hasSeenLanding) {
-        setShowLanding(true);
       }
     } catch (error) {
       console.error('Error loading data from localStorage:', error);
@@ -173,12 +183,6 @@ function App() {
     setSettings(newSettings);
   };
 
-  // Landing handler
-  const handleLandingComplete = () => {
-    setShowLanding(false);
-    localStorage.setItem('dogtale-landing-seen', 'true');
-  };
-
   // Check if current image is favorited
   const isCurrentImageFavorited = currentImage && favorites.some(fav => fav.url === currentImage.url);
 
@@ -220,8 +224,8 @@ function App() {
     isStatsOpen,
     isShortcutsOpen,
     isSettingsOpen,
-    isASCIIVisualizerOpen,
-    isSocialHubOpen
+    isSocialHubOpen,
+    showASCIIVisualizer
   ];
   const anyModalOpen = modalStates.some(state => state);
 
@@ -259,6 +263,14 @@ function App() {
 
   return (
     <ErrorBoundary>
+      {/* Visual Landing - shown on first visit */}
+      {showVisualLanding && <VisualLanding onEnter={handleEnterApp} />}
+
+      {/* ASCII Visualizer - can be opened anytime */}
+      {showASCIIVisualizer && (
+        <ASCIIVisualizer onClose={() => setShowASCIIVisualizer(false)} />
+      )}
+
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 transition-colors duration-200">
         <div className="container mx-auto max-w-2xl">
           <div className="relative mb-4">
@@ -267,28 +279,28 @@ function App() {
             </h1>
             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-2">
               <button
+                onClick={() => setShowASCIIVisualizer(true)}
+                className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                aria-label="Visual Guide"
+                title="What is this? (Visual Guide)"
+              >
+                <span className="text-xl">💡</span>
+              </button>
+              <button
+                onClick={() => setIsSocialHubOpen(true)}
+                className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                aria-label="Social Hub"
+                title="Pet Social Hub"
+              >
+                <span className="text-xl">🐾</span>
+              </button>
+              <button
                 onClick={toggleDarkMode}
                 className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                 title={isDarkMode ? 'Light mode (D)' : 'Dark mode (D)'}
               >
                 <span className="text-xl">{isDarkMode ? '☀️' : '🌙'}</span>
-              </button>
-              <button
-                onClick={() => setIsSocialHubOpen(true)}
-                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Social Hub"
-                title="Social Hub"
-              >
-                <span className="text-xl">👥</span>
-              </button>
-              <button
-                onClick={() => setIsASCIIVisualizerOpen(true)}
-                className="p-2 bg-white/50 dark:bg-gray-700/50 hover:bg-white/70 dark:hover:bg-gray-700/70 rounded-lg transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="ASCII Guide"
-                title="ASCII Guide"
-              >
-                <span className="text-xl">ℹ️</span>
               </button>
               <button
                 onClick={() => setShowMonthView(!showMonthView)}
@@ -412,18 +424,9 @@ function App() {
         onSettingsChange={handleSettingsChange}
       />
 
-      <ASCIIVisualizer
-        isOpen={isASCIIVisualizerOpen}
-        onClose={() => setIsASCIIVisualizerOpen(false)}
-      />
-
-      <SocialHub
-        isOpen={isSocialHubOpen}
-        onClose={() => setIsSocialHubOpen(false)}
-      />
-
-      {/* Landing screen - shows once on first visit */}
-      {showLanding && <VisualLanding onComplete={handleLandingComplete} />}
+      {isSocialHubOpen && (
+        <SocialHub onClose={() => setIsSocialHubOpen(false)} />
+      )}
     </ErrorBoundary>
   );
 }

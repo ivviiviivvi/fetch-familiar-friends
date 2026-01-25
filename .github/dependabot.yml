@@ -7,13 +7,41 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
+    reviewers:
+      - "ivi374forivi"
+    assignees:
+      - "ivi374forivi"
+    labels:
+      - "dependencies"
+      - "automated"
     commit-message:
       prefix: "chore"
       include: "scope"
-    labels:
-      - "dependencies"
-      - "javascript"
+    versioning-strategy: increase
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    groups:
+      # Group React-related updates
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      # Group dev dependencies
+      development:
+        dependency-type: "development"
+        patterns:
+          - "vite"
+          - "eslint*"
+          - "prettier"
+          - "@vitejs/*"
+      # Group production dependencies
+      production:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -22,10 +50,12 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 10
-    commit-message:
-      prefix: "chore"
-      include: "scope"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "ivi374forivi"
     labels:
-      - "dependencies"
       - "github-actions"
+      - "dependencies"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

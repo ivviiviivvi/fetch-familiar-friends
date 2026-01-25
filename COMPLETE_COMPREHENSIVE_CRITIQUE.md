@@ -509,7 +509,7 @@ Last updated: [Date]
    ```javascript
    class SecureStorage {
      constructor(password) {
-       this.password = password;
+       this.password = password; // allow-secret
      }
      
      encrypt(data) {
