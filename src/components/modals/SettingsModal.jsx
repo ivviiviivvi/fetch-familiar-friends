@@ -54,7 +54,15 @@ const SettingsModal = ({ isOpen, onClose, settings, onSettingsChange }) => {
   const handleClearAllData = () => {
     if (confirm('WARNING: Clear ALL data including journal entries, favorites, and settings? This CANNOT be undone!')) {
       if (confirm('Are you absolutely sure? All your data will be permanently deleted.')) {
-        localStorage.clear();
+        // Only remove dogtale-* keys, not all localStorage data for the origin
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('dogtale-')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
         window.location.reload();
       }
     }
