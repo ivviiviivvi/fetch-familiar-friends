@@ -7,12 +7,41 @@ import ActivityFeed from './ActivityFeed';
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }) => <div {...props}>{children}</div>,
+    button: ({ children, ...props }) => <button {...props}>{children}</button>,
   },
+  AnimatePresence: ({ children }) => <>{children}</>,
 }));
 
 // Mock socialData utilities
 vi.mock('../../utils/socialData', () => ({
   timeAgo: vi.fn((date) => '3 hours ago'),
+}));
+
+// Mock useAuth hook
+vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: null,
+    isAuthenticated: false,
+    isOnlineMode: true,
+  }),
+}));
+
+// Mock useActivityFeed hook
+vi.mock('../../hooks/useActivityFeed', () => ({
+  useActivityFeed: () => ({
+    activities: [],
+    loading: false,
+    loadingMore: false,
+    hasMore: false,
+    error: null,
+    toggleReaction: vi.fn(),
+    addComment: vi.fn(),
+    deleteActivity: vi.fn(),
+    createActivity: vi.fn(),
+    loadMore: vi.fn(),
+    refresh: vi.fn(),
+    clearError: vi.fn(),
+  }),
 }));
 
 const mockActivities = [
@@ -157,29 +186,28 @@ describe('ActivityFeed Component', () => {
     it('renders like buttons for each activity', () => {
       render(<ActivityFeed activities={mockActivities} />);
 
-      // Each activity should have like button with heart emoji
-      const likeButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent.includes('❤️')
-      );
-      expect(likeButtons).toHaveLength(3);
+      // Each activity should have like button - component uses Lucide Heart icon
+      // We can verify by checking that buttons with like counts exist
+      expect(screen.getByText('15')).toBeInTheDocument();
+      expect(screen.getByText('28')).toBeInTheDocument();
+      expect(screen.getByText('42')).toBeInTheDocument();
     });
 
     it('renders comment buttons for each activity', () => {
       render(<ActivityFeed activities={mockActivities} />);
 
-      // Each activity should have comment button with speech emoji
-      const commentButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent.includes('💬')
-      );
-      expect(commentButtons).toHaveLength(3);
+      // Each activity should have comment button - component uses Lucide MessageCircle icon
+      // We can verify by checking that buttons with comment counts exist
+      expect(screen.getByText('3')).toBeInTheDocument();
+      expect(screen.getByText('7')).toBeInTheDocument();
+      expect(screen.getByText('12')).toBeInTheDocument();
     });
 
     it('renders share buttons for each activity', () => {
       render(<ActivityFeed activities={mockActivities} />);
 
-      const shareButtons = screen.getAllByRole('button').filter(btn =>
-        btn.textContent.includes('🔄')
-      );
+      // Component uses Lucide Share2 icon with "Share" text
+      const shareButtons = screen.getAllByText('Share');
       expect(shareButtons).toHaveLength(3);
     });
   });
@@ -189,7 +217,8 @@ describe('ActivityFeed Component', () => {
       render(<ActivityFeed activities={[]} />);
 
       expect(screen.getByText('🐾')).toBeInTheDocument();
-      expect(screen.getByText(/No recent activities/)).toBeInTheDocument();
+      // Component shows "No activities yet!" not "No recent activities"
+      expect(screen.getByText(/No activities yet!/)).toBeInTheDocument();
       expect(screen.getByText(/Connect with friends to see their updates!/)).toBeInTheDocument();
     });
 
@@ -220,8 +249,9 @@ describe('ActivityFeed Component', () => {
     it('has hover transition for like button', () => {
       render(<ActivityFeed activities={mockActivities} />);
 
+      // Find button containing the like count (15) - component uses Lucide Heart icon
       const buttons = screen.getAllByRole('button');
-      const likeButton = buttons.find(btn => btn.textContent.includes('❤️'));
+      const likeButton = buttons.find(btn => btn.textContent.includes('15'));
 
       expect(likeButton).toHaveClass('hover:text-red-500');
     });
@@ -229,8 +259,9 @@ describe('ActivityFeed Component', () => {
     it('has hover transition for comment button', () => {
       render(<ActivityFeed activities={mockActivities} />);
 
+      // Find button containing the comment count (3) - component uses Lucide MessageCircle icon
       const buttons = screen.getAllByRole('button');
-      const commentButton = buttons.find(btn => btn.textContent.includes('💬'));
+      const commentButton = buttons.find(btn => btn.textContent.includes('3') && !btn.textContent.includes('15'));
 
       expect(commentButton).toHaveClass('hover:text-blue-500');
     });
@@ -238,8 +269,9 @@ describe('ActivityFeed Component', () => {
     it('has hover transition for share button', () => {
       render(<ActivityFeed activities={mockActivities} />);
 
+      // Component uses Lucide Share2 icon with "Share" text
       const buttons = screen.getAllByRole('button');
-      const shareButton = buttons.find(btn => btn.textContent.includes('🔄'));
+      const shareButton = buttons.find(btn => btn.textContent.includes('Share'));
 
       expect(shareButton).toHaveClass('hover:text-green-500');
     });

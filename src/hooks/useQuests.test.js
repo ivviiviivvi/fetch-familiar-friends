@@ -2,35 +2,38 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import React from 'react';
 
-// Mock the supabase module
-const mockQueryBuilder = {
-  select: vi.fn().mockReturnThis(),
-  insert: vi.fn().mockReturnThis(),
-  update: vi.fn().mockReturnThis(),
-  upsert: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  or: vi.fn().mockReturnThis(),
-  is: vi.fn().mockReturnThis(),
-  order: vi.fn().mockReturnThis(),
-  single: vi.fn(),
-  then: vi.fn(),
-};
+// Use vi.hoisted() to define mock objects that are available when vi.mock() runs
+const { mockQueryBuilder, mockSupabase, mockAuthContext } = vi.hoisted(() => {
+  const mockQueryBuilder = {
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    upsert: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    single: vi.fn(),
+    then: vi.fn(),
+  };
 
-const mockSupabase = {
-  from: vi.fn(() => mockQueryBuilder),
-  rpc: vi.fn(),
-};
+  const mockSupabase = {
+    from: vi.fn(() => mockQueryBuilder),
+    rpc: vi.fn(),
+  };
+
+  const mockAuthContext = {
+    user: null,
+    isAuthenticated: false,
+  };
+
+  return { mockQueryBuilder, mockSupabase, mockAuthContext };
+});
 
 vi.mock('../config/supabase', () => ({
   supabase: mockSupabase,
   isOnlineMode: true,
 }));
-
-// Mock the AuthContext
-const mockAuthContext = {
-  user: null,
-  isAuthenticated: false,
-};
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => mockAuthContext,

@@ -13,15 +13,20 @@ import {
   resetIdCounter,
 } from './setup';
 
-// Mock the supabase module
-let mockSupabase;
+// Use vi.hoisted() to define mockSupabase that can be mutated
+const { mockSupabaseRef } = vi.hoisted(() => ({
+  mockSupabaseRef: { current: null },
+}));
 
 vi.mock('../../config/supabase', () => ({
   get supabase() {
-    return mockSupabase;
+    return mockSupabaseRef.current;
   },
   isOnlineMode: true,
 }));
+
+// Alias for easier use in tests
+let mockSupabase;
 
 // Import after mocking
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
@@ -143,6 +148,7 @@ describe('Auth Flow Integration Tests', () => {
   beforeEach(() => {
     resetIdCounter();
     mockSupabase = createMockSupabaseClient();
+    mockSupabaseRef.current = mockSupabase;
     localStorage.clear();
     vi.clearAllMocks();
   });
