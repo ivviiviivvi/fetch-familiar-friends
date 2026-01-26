@@ -13,6 +13,7 @@ import CoachingHub from './CoachingHub';
 import VetTelemedicine from './VetTelemedicine';
 import SubscriptionTiers from './SubscriptionTiers';
 import GameplayHub from './GameplayHub';
+import Leaderboards from './Leaderboards';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../contexts/SubscriptionContext';
 import { useFriends } from '../../hooks/useFriends';
@@ -80,6 +81,7 @@ function SocialHub({ onClose }) {
   const tabs = [
     { id: 'feed', name: 'Feed', icon: '📰', requiresAuth: false },
     { id: 'gameplay', name: 'Quests', icon: '🎮', requiresAuth: false },
+    { id: 'leaderboard', name: 'Rankings', icon: '🏆', requiresAuth: false },
     { id: 'friends', name: 'Friends', icon: '👥', premium: true },
     { id: 'nearby', name: 'Nearby', icon: '📍', premium: true },
     { id: 'coaching', name: 'Coaches', icon: '🏋️', premium: true },
@@ -214,6 +216,7 @@ function SocialHub({ onClose }) {
             />
           )}
           {activeTab === 'gameplay' && <GameplayHub />}
+          {activeTab === 'leaderboard' && <Leaderboards />}
           {activeTab === 'friends' && (
             <FriendsList
               friends={friends}

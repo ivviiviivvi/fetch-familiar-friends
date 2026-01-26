@@ -1,25 +1,42 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useQuests } from '../../hooks/useQuests';
+import { useAuth } from '../../contexts/AuthContext';
+
+// Mock data fallback for unauthenticated users
+const MOCK_DAILY_QUESTS = [
+  { id: 1, quest_key: 'daily_walk', title: 'Morning Walk', xp: 50, progress: 1, target: 1, icon: '🚶', percentComplete: 100, isComplete: true },
+  { id: 2, quest_key: 'daily_photo', title: 'Photo of the Day', xp: 30, progress: 0, target: 1, icon: '📸', percentComplete: 0, isComplete: false },
+  { id: 3, quest_key: 'daily_trick', title: 'Train a Trick', xp: 75, progress: 0, target: 1, icon: '🎓', percentComplete: 0, isComplete: false },
+  { id: 4, quest_key: 'daily_social', title: 'Social Interaction', xp: 40, progress: 2, target: 3, icon: '👥', percentComplete: 66, isComplete: false },
+  { id: 5, quest_key: 'daily_health', title: 'Health Check', xp: 25, progress: 1, target: 1, icon: '❤️', percentComplete: 100, isComplete: true },
+];
+
+const MOCK_WEEKLY_QUESTS = [
+  { id: 6, quest_key: 'weekly_explore', title: 'Visit 3 New Locations', xp: 200, progress: 1, target: 3, icon: '🗺️', percentComplete: 33, isComplete: false },
+  { id: 7, quest_key: 'weekly_gym', title: 'Complete 5 Gym Challenges', xp: 300, progress: 2, target: 5, icon: '🏆', percentComplete: 40, isComplete: false },
+  { id: 8, quest_key: 'weekly_friends', title: 'Make 2 New Friends', xp: 150, progress: 0, target: 2, icon: '🌟', percentComplete: 0, isComplete: false },
+  { id: 9, quest_key: 'weekly_walk', title: 'Log 10 Miles Walking', xp: 250, progress: 6.5, target: 10, icon: '👟', percentComplete: 65, isComplete: false },
+];
 
 function GameplayHub() {
   const [selectedTab, setSelectedTab] = useState('quests');
+  const { isAuthenticated } = useAuth();
 
-  // Daily/Weekly Quests (Pokemon-style tasks)
-  const quests = {
-    daily: [
-      { id: 1, name: 'Morning Walk', xp: 50, progress: 1, goal: 1, reward: '🦴 Treat Token', completed: true },
-      { id: 2, name: 'Photo of the Day', xp: 30, progress: 0, goal: 1, reward: '📸 Photo Badge', completed: false },
-      { id: 3, name: 'Train a Trick', xp: 75, progress: 0, goal: 1, reward: '🎓 Training XP', completed: false },
-      { id: 4, name: 'Social Interaction', xp: 40, progress: 2, goal: 3, reward: '👥 Friend Points', completed: false },
-      { id: 5, name: 'Health Check', xp: 25, progress: 1, goal: 1, reward: '❤️ Health Star', completed: true },
-    ],
-    weekly: [
-      { id: 6, name: 'Visit 3 New Locations', xp: 200, progress: 1, goal: 3, reward: '🗺️ Explorer Badge', completed: false },
-      { id: 7, name: 'Complete 5 Gym Challenges', xp: 300, progress: 2, goal: 5, reward: '🏆 Champion Trophy', completed: false },
-      { id: 8, name: 'Make 2 New Friends', xp: 150, progress: 0, goal: 2, reward: '🌟 Social Star', completed: false },
-      { id: 9, name: 'Log 10 Miles Walking', xp: 250, progress: 6.5, goal: 10, reward: '👟 Walker Badge', completed: false },
-    ],
-  };
+  const {
+    dailyQuests: realDailyQuests,
+    weeklyQuests: realWeeklyQuests,
+    loading: questsLoading,
+    error: questsError,
+    completedDailyCount,
+    completedWeeklyCount,
+    totalDailyXp,
+    claimRewards,
+  } = useQuests();
+
+  // Use real data when authenticated, fall back to mock
+  const dailyQuests = isAuthenticated && realDailyQuests.length > 0 ? realDailyQuests : MOCK_DAILY_QUESTS;
+  const weeklyQuests = isAuthenticated && realWeeklyQuests.length > 0 ? realWeeklyQuests : MOCK_WEEKLY_QUESTS;
 
   // Battle Pass / Season Pass
   const seasonPass = {
@@ -207,80 +224,150 @@ function GameplayHub() {
       {/* Quests Tab */}
       {selectedTab === 'quests' && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
-            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-100 mb-4">
-              ☀️ Daily Quests
-            </h4>
-            <div className="space-y-3">
-              {quests.daily.map((quest) => (
-                <div
-                  key={quest.id}
-                  className={`p-4 rounded-lg ${
-                    quest.completed
-                      ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700'
-                      : 'bg-gray-50 dark:bg-gray-700'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h5 className="font-semibold text-gray-800 dark:text-gray-100">{quest.name}</h5>
-                        {quest.completed && <span className="text-green-500 text-xl">✓</span>}
-                      </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm">
-                        <span className="text-blue-600 dark:text-blue-400">+{quest.xp} XP</span>
-                        <span className="text-gray-600 dark:text-gray-400">{quest.reward}</span>
-                      </div>
-                      {!quest.completed && (
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-gray-600 dark:text-gray-400">Progress</span>
-                            <span className="font-semibold">{quest.progress}/{quest.goal}</span>
+          {/* Loading state */}
+          {questsLoading && (
+            <div className="flex justify-center py-8">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+
+          {/* Error state */}
+          {questsError && (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 p-4 rounded-lg">
+              <p>Failed to load quests: {questsError}</p>
+            </div>
+          )}
+
+          {/* Quest summary (when authenticated) */}
+          {isAuthenticated && !questsLoading && (
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-lg font-bold">Today&apos;s Progress</h4>
+                  <p className="text-blue-100">
+                    {completedDailyCount} daily quests completed • {totalDailyXp} XP earned
+                  </p>
+                </div>
+                <div className="text-4xl">🎯</div>
+              </div>
+            </div>
+          )}
+
+          {!questsLoading && (
+            <>
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                <h4 className="font-bold text-lg text-gray-800 dark:text-gray-100 mb-4">
+                  ☀️ Daily Quests
+                </h4>
+                <div className="space-y-3">
+                  {dailyQuests.map((quest) => (
+                    <div
+                      key={quest.id || quest.quest_key}
+                      className={`p-4 rounded-lg ${
+                        quest.isComplete
+                          ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700'
+                          : 'bg-gray-50 dark:bg-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{quest.icon}</span>
+                            <h5 className="font-semibold text-gray-800 dark:text-gray-100">{quest.title}</h5>
+                            {quest.isComplete && <span className="text-green-500 text-xl">✓</span>}
                           </div>
-                          <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-blue-500 transition-all"
-                              style={{ width: `${(quest.progress / quest.goal) * 100}%` }}
-                            ></div>
+                          <div className="flex items-center gap-4 mt-2 text-sm">
+                            <span className="text-blue-600 dark:text-blue-400">+{quest.xp} XP</span>
+                            {quest.description && (
+                              <span className="text-gray-600 dark:text-gray-400">{quest.description}</span>
+                            )}
                           </div>
+                          {!quest.isComplete && (
+                            <div className="mt-3">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-gray-600 dark:text-gray-400">Progress</span>
+                                <span className="font-semibold">{quest.progress}/{quest.target}</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-blue-500 transition-all"
+                                  style={{ width: `${quest.percentComplete}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
+                        {quest.isComplete && !quest.rewards_claimed && isAuthenticated && (
+                          <button
+                            onClick={() => claimRewards(quest.id)}
+                            className="ml-4 px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg font-bold text-sm hover:from-yellow-500 hover:to-orange-600 transition-all"
+                          >
+                            Claim
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                <h4 className="font-bold text-lg text-gray-800 dark:text-gray-100 mb-4">
+                  📅 Weekly Challenges
+                  {isAuthenticated && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      ({completedWeeklyCount} completed)
+                    </span>
+                  )}
+                </h4>
+                <div className="space-y-3">
+                  {weeklyQuests.map((quest) => (
+                    <div
+                      key={quest.id || quest.quest_key}
+                      className={`p-4 rounded-lg ${
+                        quest.isComplete
+                          ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700'
+                          : 'bg-gray-50 dark:bg-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{quest.icon}</span>
+                          <h5 className="font-semibold text-gray-800 dark:text-gray-100">{quest.title}</h5>
+                          {quest.isComplete && <span className="text-green-500 text-xl">✓</span>}
+                        </div>
+                        <span className="text-blue-600 dark:text-blue-400 font-bold">+{quest.xp} XP</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {typeof quest.progress === 'number' && quest.progress % 1 !== 0
+                            ? quest.progress.toFixed(1)
+                            : quest.progress}/{quest.target}
+                        </span>
+                        {quest.description && (
+                          <span className="text-purple-600 dark:text-purple-400">{quest.description}</span>
+                        )}
+                      </div>
+                      <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                          style={{ width: `${quest.percentComplete}%` }}
+                        ></div>
+                      </div>
+                      {quest.isComplete && !quest.rewards_claimed && isAuthenticated && (
+                        <button
+                          onClick={() => claimRewards(quest.id)}
+                          className="mt-3 w-full py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg font-bold text-sm hover:from-yellow-500 hover:to-orange-600 transition-all"
+                        >
+                          Claim Reward
+                        </button>
                       )}
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
-            <h4 className="font-bold text-lg text-gray-800 dark:text-gray-100 mb-4">
-              📅 Weekly Challenges
-            </h4>
-            <div className="space-y-3">
-              {quests.weekly.map((quest) => (
-                <div key={quest.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h5 className="font-semibold text-gray-800 dark:text-gray-100">{quest.name}</h5>
-                    <span className="text-blue-600 dark:text-blue-400 font-bold">+{quest.xp} XP</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      {typeof quest.progress === 'number' && quest.progress % 1 !== 0
-                        ? quest.progress.toFixed(1)
-                        : quest.progress}/{quest.goal}
-                    </span>
-                    <span className="text-purple-600 dark:text-purple-400">{quest.reward}</span>
-                  </div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
-                      style={{ width: `${(quest.progress / quest.goal) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 

@@ -1,8 +1,54 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import PropTypes from 'prop-types';
+import { useSubscription } from '../../contexts/SubscriptionContext';
+import { useAuth } from '../../contexts/AuthContext';
 
-function SubscriptionTiers() {
+function SubscriptionTiers({ currentTier: propCurrentTier }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const [error, setError] = useState(null);
+
+  const { isAuthenticated } = useAuth();
+  const {
+    currentTier: contextCurrentTier,
+    createCheckoutSession,
+    createPortalSession,
+    loading: subscriptionLoading,
+  } = useSubscription();
+
+  // Use prop if provided, otherwise fall back to context
+  const currentTier = propCurrentTier || contextCurrentTier;
+
+  const handleSubscribe = async (tierId) => {
+    if (tierId === 'free' || tierId === currentTier) return;
+
+    if (!isAuthenticated) {
+      setError('Please sign in to subscribe');
+      return;
+    }
+
+    try {
+      setCheckoutLoading(tierId);
+      setError(null);
+      const { error: checkoutError } = await createCheckoutSession(tierId);
+      if (checkoutError) throw checkoutError;
+      // Redirects to Stripe, no return expected
+    } catch (err) {
+      setError(err.message || 'Failed to start checkout');
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      setError(null);
+      const { error: portalError } = await createPortalSession();
+      if (portalError) throw portalError;
+    } catch (err) {
+      setError(err.message || 'Failed to open subscription portal');
+    }
+  };
 
   const tiers = [
     {
@@ -121,6 +167,28 @@ function SubscriptionTiers() {
         </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <div className="text-center">
+          <p className="text-red-500 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg inline-block">
+            {error}
+          </p>
+        </div>
+      )}
+
+      {/* Manage Subscription Button (for paid subscribers) */}
+      {currentTier !== 'free' && isAuthenticated && (
+        <div className="flex justify-center">
+          <button
+            onClick={handleManageSubscription}
+            disabled={subscriptionLoading}
+            className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-all disabled:opacity-50"
+          >
+            {subscriptionLoading ? 'Loading...' : 'Manage Subscription'}
+          </button>
+        </div>
+      )}
+
       {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {tiers.map((tier, index) => (
@@ -178,12 +246,27 @@ function SubscriptionTiers() {
                 ))}
               </ul>
 
-              <button className={`w-full mt-6 py-3 rounded-lg font-bold transition-all ${
-                tier.popular
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}>
-                {tier.price.monthly === 0 ? 'Get Started Free' : 'Subscribe Now'}
+              <button
+                onClick={() => handleSubscribe(tier.id)}
+                disabled={checkoutLoading !== null || tier.id === currentTier || subscriptionLoading}
+                className={`w-full mt-6 py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  tier.popular
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {checkoutLoading === tier.id ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    Processing...
+                  </span>
+                ) : tier.id === currentTier ? (
+                  'Current Plan'
+                ) : tier.price.monthly === 0 ? (
+                  'Free Forever'
+                ) : (
+                  'Subscribe Now'
+                )}
               </button>
             </div>
           </motion.div>
@@ -302,5 +385,9 @@ function SubscriptionTiers() {
     </div>
   );
 }
+
+SubscriptionTiers.propTypes = {
+  currentTier: PropTypes.string,
+};
 
 export default SubscriptionTiers;

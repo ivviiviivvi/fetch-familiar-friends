@@ -15,6 +15,7 @@ import SocialHub from './components/social/SocialHub';
 import ASCIIVisualizer from './components/ASCIIVisualizer';
 import LoginModal from './components/auth/LoginModal';
 import SignupModal from './components/auth/SignupModal';
+import HealthDashboard from './components/health/HealthDashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { useNavigationShortcuts, useModalShortcuts, useThemeCycleShortcut, useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -43,6 +44,9 @@ function App() {
   // Auth modal states
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+
+  // Health modal state
+  const [isHealthOpen, setIsHealthOpen] = useState(false);
 
   // Data states
   const [favorites, setFavorites] = useState([]);
@@ -236,7 +240,8 @@ function App() {
     isSocialHubOpen,
     showASCIIVisualizer,
     isLoginOpen,
-    isSignupOpen
+    isSignupOpen,
+    isHealthOpen
   ];
   const anyModalOpen = modalStates.some(state => state);
 
@@ -264,6 +269,7 @@ function App() {
     'm': () => setShowMonthView(!showMonthView),
     'd': toggleDarkMode,
     ',': () => setIsSettingsOpen(true),
+    'h': () => setIsHealthOpen(true),
   }, !anyModalOpen);
 
   // Stable handler for date selection to prevent MonthCalendar re-renders
@@ -304,6 +310,14 @@ function App() {
                 title="Pet Social Hub"
               >
                 <span className="text-xl">🐾</span>
+              </button>
+              <button
+                onClick={() => setIsHealthOpen(true)}
+                className="p-2 bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white rounded-lg transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                aria-label="Health Dashboard"
+                title="Pet Health Dashboard (H)"
+              >
+                <span className="text-xl">🏥</span>
               </button>
               <button
                 onClick={toggleDarkMode}
@@ -502,6 +516,12 @@ function App() {
           setIsSignupOpen(false);
           setIsLoginOpen(true);
         }}
+      />
+
+      {/* Health Dashboard */}
+      <HealthDashboard
+        isOpen={isHealthOpen}
+        onClose={() => setIsHealthOpen(false)}
       />
     </ErrorBoundary>
   );
