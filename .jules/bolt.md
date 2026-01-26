@@ -1,7 +1,6 @@
-# Bolt's Journal
 
-This file contains critical learnings and insights from Bolt's performance optimization work.
-
-## 2025-05-15 - React Component Optimization
-**Learning:** `React.memo` is only effective if the props passed to the component are stable. Inline arrow functions (e.g., `onClick={() => ...}`) create new references on every render, defeating the purpose of memoization.
-**Action:** Always wrap callback props in `useCallback` when passing them to memoized components. Also, defining static data outside the component prevents recreation.
+## 2026-01-21 - Calendar Performance Optimization
+**Learning:** Optimizing render loops in grid-based components (like calendars) provides significant wins. Memoizing the individual cell component (`CalendarDay`) prevents ~40 unnecessary re-renders when a single day is selected. Additionally, converting array-based lookups (O(N*M)) to Set-based lookups (O(N)) inside the render loop drastically reduces computational overhead.
+**Action:** When working with list or grid renderings, always check for:
+1. Lookup complexity inside the map loop (prefer Sets over Arrays).
+2. Child component stability (memoize items if parent re-renders frequently but items don't).
