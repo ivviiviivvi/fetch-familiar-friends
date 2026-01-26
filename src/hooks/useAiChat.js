@@ -9,7 +9,7 @@ import {
   saveConversation,
   loadConversation,
 } from '../services/aiService';
-import { getBreedsKnowledge } from '../utils/breedKnowledge';
+import { getBreedInfo } from '../utils/breedKnowledge';
 
 /**
  * Hook for managing AI chat state and interactions
@@ -33,7 +33,7 @@ export function useAiChat(options = {}) {
 
   // Generate breed context if provided
   const breedContext = options.breedContext
-    ? getBreedsKnowledge(options.breedContext)
+    ? getBreedInfo(options.breedContext)
     : null;
 
   // Check rate limit on mount and after sending messages

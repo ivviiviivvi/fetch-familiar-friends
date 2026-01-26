@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AiModal from './AiModal';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { SubscriptionProvider } from '../../contexts/SubscriptionContext';
 
 // Mock dependencies
 vi.mock('./Modal', () => ({
@@ -17,7 +19,30 @@ vi.mock('./Modal', () => ({
 
 vi.mock('../../utils/breedKnowledge', () => ({
   getBreedSpecificResponse: vi.fn(),
+  getBreedInfo: vi.fn(),
 }));
+
+// Mock the AI service to avoid actual API calls
+vi.mock('../../services/aiService', () => ({
+  sendAiMessage: vi.fn().mockResolvedValue({ content: 'Mock response', provider: 'mock' }),
+  checkAiRateLimit: vi.fn().mockResolvedValue({ allowed: true, remaining: 5, limit: 5 }),
+  incrementAiUsage: vi.fn().mockResolvedValue(undefined),
+  saveConversation: vi.fn().mockResolvedValue(undefined),
+  loadConversation: vi.fn().mockResolvedValue([]),
+}));
+
+// Wrapper component with providers
+const TestWrapper = ({ children }) => (
+  <AuthProvider>
+    <SubscriptionProvider>
+      {children}
+    </SubscriptionProvider>
+  </AuthProvider>
+);
+
+const renderWithProviders = (ui) => {
+  return render(ui, { wrapper: TestWrapper });
+};
 
 describe('AiModal Security Tests', () => {
   beforeEach(() => {
@@ -33,7 +58,7 @@ describe('AiModal Security Tests', () => {
     const user = userEvent.setup();
     const handleClose = vi.fn();
 
-    render(<AiModal isOpen={true} onClose={handleClose} />);
+    renderWithProviders(<AiModal isOpen={true} onClose={handleClose} />);
 
     const input = screen.getByLabelText('Message input');
     const sendButton = screen.getByLabelText('Send message');
@@ -59,7 +84,7 @@ describe('AiModal Security Tests', () => {
      const user = userEvent.setup();
      const handleClose = vi.fn();
 
-     render(<AiModal isOpen={true} onClose={handleClose} />);
+     renderWithProviders(<AiModal isOpen={true} onClose={handleClose} />);
 
      const input = screen.getByLabelText('Message input');
      const sendButton = screen.getByLabelText('Send message');
