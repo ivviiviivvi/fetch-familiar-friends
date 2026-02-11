@@ -5,6 +5,14 @@
 
 # Fetch Familiar Friends
 
+[![CI](https://github.com/organvm-iii-ergon/fetch-familiar-friends/actions/workflows/ci.yml/badge.svg)](https://github.com/organvm-iii-ergon/fetch-familiar-friends/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-pending-lightgrey)](https://github.com/organvm-iii-ergon/fetch-familiar-friends)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/organvm-iii-ergon/fetch-familiar-friends/blob/main/LICENSE)
+[![Organ III](https://img.shields.io/badge/Organ-III%20Ergon-F59E0B)](https://github.com/organvm-iii-ergon)
+[![Status](https://img.shields.io/badge/status-active-brightgreen)](https://github.com/organvm-iii-ergon/fetch-familiar-friends)
+[![TypeScript](https://img.shields.io/badge/lang-TypeScript-informational)](https://github.com/organvm-iii-ergon/fetch-familiar-friends)
+
+
 **A social pet calendar, care tracker, and gamified companion app for dog and cat owners — built on React 18, Supabase, and Stripe.**
 
 Fetch Familiar Friends (internally branded *DogTale Daily*) is a consumer-facing B2C progressive web application that transforms everyday pet ownership into an engaging daily ritual. The app delivers personalized dog and cat imagery each day, layered with journaling, health tracking, social networking, a full gamification engine, and a three-tier subscription model. It sits within [ORGAN-III (Ergon)](https://github.com/organvm-iii-ergon), the commerce organ of the eight-organ creative-institutional system, and represents a production-ready consumer product with real monetization infrastructure.
